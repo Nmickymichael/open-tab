@@ -171,7 +171,18 @@ create policy "public read active polls" on public.reader_polls for select to an
 create policy "public read poll options" on public.reader_poll_options for select to anon,authenticated using(exists(select 1 from public.reader_polls p where p.id=poll_id and (p.is_active or public.has_editor_access())));
 create policy "reader vote once" on public.reader_poll_votes for insert to authenticated
 with check(user_id=auth.uid() and exists(select 1 from public.reader_polls p where p.id=poll_id and p.is_active and (p.closes_at is null or p.closes_at>now())) and exists(select 1 from public.reader_poll_options o where o.id=option_id and o.poll_id=poll_id));
-create policy "read poll totals" on public.reader_poll_votes for select to anon,authenticated using(true);
+create or replace function public.get_poll_results(p_poll_id uuid)
+returns table(option_id uuid,vote_count bigint)
+language sql stable security definer set search_path=public as $
+  select o.id,count(v.id)::bigint
+  from public.reader_poll_options o
+  left join public.reader_poll_votes v on v.option_id=o.id
+  where o.poll_id=p_poll_id
+  group by o.id
+  order by o.sort_order;
+$;
+revoke all on function public.get_poll_results(uuid) from public;
+grant execute on function public.get_poll_results(uuid) to anon,authenticated;
 create policy "editors manage polls" on public.reader_polls for all to authenticated using(public.has_editor_access()) with check(public.has_editor_access());
 create policy "editors manage poll options" on public.reader_poll_options for all to authenticated using(public.has_editor_access()) with check(public.has_editor_access());
 create policy "editors read revisions" on public.article_revisions for select to authenticated using(public.has_editor_access() or exists(select 1 from public.articles a where a.id=article_id and a.author_id=auth.uid()));
