@@ -9,6 +9,9 @@ begin
   update public.videos set status='published'
   where status='scheduled' and published_at is not null and published_at<=now();
   get diagnostics video_count=row_count;
+  delete from public.newsletter_signup_rate_limits where attempted_at<now()-interval '30 days';
+  delete from public.article_view_rate_limits where attempted_at<now()-interval '30 days';
+  delete from public.comment_rate_limits where attempted_at<now()-interval '30 days';
   return article_count+video_count;
 end; $$;
 revoke all on function public.publish_scheduled_content() from public,anon,authenticated;
