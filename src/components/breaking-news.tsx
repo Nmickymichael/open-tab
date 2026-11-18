@@ -1,0 +1,3 @@
+import Link from "next/link";
+type Item={title:string;slug:string};
+export function BreakingNews({items}:{items:Item[]}){if(!items.length)return null;return <div className="breaking-strip"><div className="wrap flex items-center gap-4 py-3"><span className="breaking-label">BREAKING</span><div className="breaking-track" aria-label="Breaking news">{items.map((item,i)=><Link key={item.slug} href={"/story/"+item.slug}>{item.title}{i<items.length-1?<span className="mx-6 text-[#f04438]">◆</span>:null}</Link>)}</div></div></div>}
