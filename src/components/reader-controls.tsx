@@ -1,0 +1,3 @@
+"use client";
+import {useState} from "react";
+export function ReaderControls(){const[size,setSize]=useState(1);function change(next:number){const value=Math.min(1.3,Math.max(.85,next));setSize(value);document.documentElement.style.setProperty("--article-scale",String(value))}return <div className="flex items-center gap-2 text-xs muted mt-4" aria-label="Reading display controls"><span>Text size</span><button className="pill" onClick={()=>change(size-.1)} aria-label="Decrease text size">A−</button><button className="pill" onClick={()=>change(size+.1)} aria-label="Increase text size">A＋</button><button className="pill" onClick={()=>change(1)} aria-label="Reset text size">Reset</button></div>}
