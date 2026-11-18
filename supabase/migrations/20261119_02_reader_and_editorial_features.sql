@@ -169,6 +169,7 @@ create policy "reader reactions own" on public.article_reactions for all to auth
 using(user_id=auth.uid()) with check(user_id=auth.uid());
 create policy "public read active polls" on public.reader_polls for select to anon,authenticated using(is_active and (closes_at is null or closes_at>now()) or public.has_editor_access());
 create policy "public read poll options" on public.reader_poll_options for select to anon,authenticated using(exists(select 1 from public.reader_polls p where p.id=poll_id and (p.is_active or public.has_editor_access())));
+create policy "read own poll vote" on public.reader_poll_votes for select to authenticated using(user_id=auth.uid());
 create policy "reader vote once" on public.reader_poll_votes for insert to authenticated
 with check(user_id=auth.uid() and exists(select 1 from public.reader_polls p where p.id=poll_id and p.is_active and (p.closes_at is null or p.closes_at>now())) and exists(select 1 from public.reader_poll_options o where o.id=option_id and o.poll_id=poll_id));
 create or replace function public.get_poll_results(p_poll_id uuid)
