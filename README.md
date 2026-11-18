@@ -45,7 +45,7 @@ The dashboard supports article creation/editing, Markdown article bodies, publis
 
 ## Media storage
 
-The hardening migration creates a public-read `open-tab-media` bucket with an 8 MB image limit and an allowlist of image MIME types. Only editor/admin roles can upload, update or delete media. The browser uses the Supabase anon key and the database role policies; never put a service-role key in client-side code.
+The hardening migration creates a public-read `open-tab-media` bucket with an 8 MB image limit and an allowlist of image MIME types. Only editor/admin roles can upload, update or delete media. The browser uses the Supabase anon key and the database role policies; never put a service-role key in client-side code. Stories and videos can be scheduled from the CMS. The scheduler migration attempts to register a one-minute Supabase Cron job; verify that `open-tab-publish-scheduled-content` exists after migration, or configure `public.publish_scheduled_content()` to run every minute in Supabase Cron.
 
 ## Edge Functions
 
@@ -68,7 +68,9 @@ Configure Edge Function secrets (never commit these values):
 
 The newsletter sender domain must be verified with the email provider. The subscription flow remains pending until a reader confirms their address. Public campaign sending is not included yet.
 
-Deploy each function with the Supabase CLI after linking the dedicated project (the link step is intentionally deferred):\n\n```bash\nsupabase functions deploy newsletter-subscribe\nsupabase functions deploy newsletter-confirm\nsupabase functions deploy newsletter-unsubscribe\nsupabase functions deploy comment-submit\nsupabase functions deploy article-view\n```\n\nThe service-role key is used only inside Edge Function secrets.
+Deploy each function with the Supabase CLI after linking the dedicated project (the link step is intentionally deferred):
+
+```bash\nsupabase functions deploy newsletter-subscribe\nsupabase functions deploy newsletter-confirm\nsupabase functions deploy newsletter-unsubscribe\nsupabase functions deploy comment-submit\nsupabase functions deploy article-view\n```\n\nThe service-role key is used only inside Edge Function secrets.
 
 ## SEO and discoverability
 
