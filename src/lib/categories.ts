@@ -1,0 +1,5 @@
+export const departments = ["Sports","Celebrities","Creators","Entertainment","Technology","Business","Lifestyle","Education","World","Videos","Opinions"] as const;
+export type Department = typeof departments[number];
+export const departmentDescriptions: Record<Department,string> = {
+ Sports:"Scores, stories, transfers and the moments shaping sport.", Celebrities:"The people, premieres and headlines everyone is talking about.", Creators:"The voices building communities across the internet.", Entertainment:"Film, television, music, gaming and pop culture.", Technology:"Ideas, products and innovations changing everyday life.", Business:"Companies, careers, money and entrepreneurship.", Lifestyle:"Culture, relationships, style, wellbeing and everyday living.", Education:"Learning, explainers, science and practical guides.", World:"International stories, perspectives and discoveries.", Videos:"Watch interviews, features and the latest video stories.", Opinions:"Arguments, reviews and perspectives worth thinking about."
+};
