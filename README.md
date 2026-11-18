@@ -70,7 +70,15 @@ The newsletter sender domain must be verified with the email provider. The subsc
 
 Deploy each function with the Supabase CLI after linking the dedicated project (the link step is intentionally deferred):
 
-```bash\nsupabase functions deploy newsletter-subscribe\nsupabase functions deploy newsletter-confirm\nsupabase functions deploy newsletter-unsubscribe\nsupabase functions deploy comment-submit\nsupabase functions deploy article-view\n```\n\nThe service-role key is used only inside Edge Function secrets.
+```bash
+supabase functions deploy newsletter-subscribe
+supabase functions deploy newsletter-confirm
+supabase functions deploy newsletter-unsubscribe
+supabase functions deploy comment-submit
+supabase functions deploy article-view
+```
+
+The service-role key is used only inside Edge Function secrets.
 
 ## SEO and discoverability
 
