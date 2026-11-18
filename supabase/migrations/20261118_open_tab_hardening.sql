@@ -1,0 +1,43 @@
+-- OPEN TAB post-foundation hardening migration. Run AFTER supabase/schema.sql.
+begin;
+alter table public.newsletter_subscribers add column if not exists confirmation_token uuid, add column if not exists unsubscribe_token uuid not null default gen_random_uuid(), add column if not exists confirmed_at timestamptz;
+alter table public.newsletter_subscribers drop constraint if exists newsletter_subscribers_status_check;
+alter table public.newsletter_subscribers add constraint newsletter_subscribers_status_check check(status in ('pending','active','unsubscribed'));
+alter table public.newsletter_subscribers alter column status set default 'pending';
+drop policy if exists "public subscribe" on public.newsletter_subscribers;
+drop policy if exists "admins manage newsletter" on public.newsletter_subscribers;
+create policy "admins read newsletter" on public.newsletter_subscribers for select using(public.has_admin_access());
+create policy "admins update newsletter" on public.newsletter_subscribers for update using(public.has_admin_access()) with check(public.has_admin_access());
+create policy "admins delete newsletter" on public.newsletter_subscribers for delete using(public.has_admin_access());
+create or replace function public.confirm_newsletter_subscription(p_token uuid) returns boolean language plpgsql security definer set search_path=public as $$
+declare changed integer;
+begin update public.newsletter_subscribers set status='active',confirmed_at=now(),confirmation_token=null where confirmation_token=p_token and status='pending'; get diagnostics changed=row_count; return changed=1; end; $$;
+create or replace function public.unsubscribe_newsletter(p_token uuid) returns boolean language plpgsql security definer set search_path=public as $$
+declare changed integer;
+begin update public.newsletter_subscribers set status='unsubscribed' where unsubscribe_token=p_token and status in ('active','pending'); get diagnostics changed=row_count; return changed=1; end; $$;
+revoke all on function public.confirm_newsletter_subscription(uuid) from public;
+revoke all on function public.unsubscribe_newsletter(uuid) from public;
+grant execute on function public.confirm_newsletter_subscription(uuid) to service_role;
+grant execute on function public.unsubscribe_newsletter(uuid) to service_role;
+create table if not exists public.newsletter_signup_rate_limits(id bigint generated always as identity primary key,ip_hash text not null,attempted_at timestamptz not null default now());
+alter table public.newsletter_signup_rate_limits enable row level security;
+revoke all on public.newsletter_signup_rate_limits from anon,authenticated;
+create index if not exists newsletter_rate_limit_idx on public.newsletter_signup_rate_limits(ip_hash,attempted_at desc);
+insert into storage.buckets(id,name,public,file_size_limit,allowed_mime_types) values('open-tab-media','open-tab-media',true,8388608,array['image/jpeg','image/png','image/webp','image/gif','image/avif']) on conflict(id) do update set public=true,file_size_limit=8388608,allowed_mime_types=excluded.allowed_mime_types;
+drop policy if exists "OPEN TAB media public read" on storage.objects;
+drop policy if exists "OPEN TAB editors upload media" on storage.objects;
+drop policy if exists "OPEN TAB editors update media" on storage.objects;
+drop policy if exists "OPEN TAB editors delete media" on storage.objects;
+create policy "OPEN TAB media public read" on storage.objects for select using(bucket_id='open-tab-media');
+create policy "OPEN TAB editors upload media" on storage.objects for insert to authenticated with check(bucket_id='open-tab-media' and public.has_editor_access());
+create policy "OPEN TAB editors update media" on storage.objects for update to authenticated using(bucket_id='open-tab-media' and public.has_editor_access()) with check(bucket_id='open-tab-media' and public.has_editor_access());
+create policy "OPEN TAB editors delete media" on storage.objects for delete to authenticated using(bucket_id='open-tab-media' and public.has_editor_access());
+drop policy if exists "public record article view" on public.article_views;
+create policy "editors record article view" on public.article_views for insert to authenticated with check(public.has_editor_access());
+drop policy if exists "public read creators" on public.creators;
+create policy "public read creators with published content" on public.creators for select using(public.has_editor_access() or exists(select 1 from public.videos v where v.creator_id=creators.id and v.status='published' and v.published_at<=now()));
+drop policy if exists "public submit pending comment" on public.comments;
+create policy "public submit pending comment" on public.comments for insert to anon,authenticated with check(status='pending' and length(trim(display_name)) between 1 and 80 and length(trim(body)) between 1 and 3000);
+drop policy if exists "read approved comments" on public.comments;
+create policy "read approved comments" on public.comments for select to anon,authenticated using(status='approved');
+commit;
