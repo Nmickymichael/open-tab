@@ -1,0 +1,6 @@
+"use client";
+import {useEffect,useState,Suspense} from "react";
+import {useSearchParams} from "next/navigation";
+import {supabase} from "@/lib/supabase";
+function UnsubscribeInner(){const params=useSearchParams();const[message,setMessage]=useState("Processing your request…");useEffect(()=>{let active=true;async function run(){const token=params.get("token");if(!token||!supabase){setMessage("This unsubscribe link is invalid.");return}const{error}=await supabase.functions.invoke("newsletter-unsubscribe",{body:{token}});if(active)setMessage(error?"We could not process this link. It may already have been used.":"You have been unsubscribed from OPEN TAB emails.");}run();return()=>{active=false}},[params]);return <main className="wrap min-h-[60vh] py-20"><div className="eyebrow">OPEN TAB newsletter</div><h1 className="headline mt-4 text-5xl">PREFER A QUIETER INBOX?</h1><p role="status" className="muted mt-5">{message}</p><a href="/" className="btn-red mt-7">Back to OPEN TAB ↗</a></main>}
+export default function UnsubscribePage(){return <Suspense fallback={<main className="wrap py-20">Loading…</main>}><UnsubscribeInner/></Suspense>}
