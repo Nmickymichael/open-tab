@@ -1,0 +1,2 @@
+import type {MetadataRoute} from "next";
+export default function manifest():MetadataRoute.Manifest{return{name:"OPEN TAB.",short_name:"OPEN TAB",description:"Your Window to Everything Interesting.",start_url:"/",display:"standalone",background_color:"#101010",theme_color:"#101010",icons:[{src:"/open-tab-mark.svg",sizes:"any",type:"image/svg+xml",purpose:"any maskable"}]}}
