@@ -18,7 +18,9 @@ export default async function Home(){
    supabase.from("articles").select("title,slug").eq("status","published").eq("is_breaking",true).lte("published_at",new Date().toISOString()).order("published_at",{ascending:false}).limit(5),
    supabase.from("articles").select("id,title,slug,excerpt,cover_image,cover_image_alt,published_at,category:categories(name,slug)").eq("status","published").eq("is_editors_pick",true).lte("published_at",new Date().toISOString()).order("published_at",{ascending:false}).limit(3),
    supabase.from("articles").select("id,title,slug,excerpt,cover_image,cover_image_alt,published_at,category:categories(name,slug)").eq("status","published").eq("is_story_of_day",true).lte("published_at",new Date().toISOString()).order("published_at",{ascending:false}).limit(1).maybeSingle(),
-   supabase.from("public_trending_articles").select("id,title,slug,excerpt,cover_image,cover_image_alt,published_at,category_name,category_slug,view_count").limit(3)
+   supabase.from("public_trending_articles").select("id,title,slug,excerpt,cover_image,cover_image_alt,published_at,category_name,category_slug,view_count").limit(3),
+   supabase.from("articles").select("id,title,slug,excerpt,cover_image,cover_image_alt,published_at,category:categories(name,slug)").eq("status","published").eq("is_weekend_read",true).lte("published_at",new Date().toISOString()).order("published_at",{ascending:false}).limit(3),
+   supabase.from("tags").select("id,name,slug,article_tags!inner(article_id)").limit(12)
   ]);
   breaking=b.data??[];picks=p.data??[];storyOfDay=d.data??null;trending=t.data??[];weekend=w.data??[];topics=tagRows.data??[];
  }
