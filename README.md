@@ -67,7 +67,7 @@ Configure Edge Function secrets (never commit these values):
 
 The newsletter sender domain must be verified with the email provider. The subscription flow remains pending until a reader confirms their address. Public campaign sending is not included yet.
 
-Deploy each function with the Supabase CLI after linking the dedicated project. The service-role key is used only inside Edge Function secrets.
+Deploy each function with the Supabase CLI after linking the dedicated project (the link step is intentionally deferred):\n\n```bash\nsupabase functions deploy newsletter-subscribe\nsupabase functions deploy newsletter-confirm\nsupabase functions deploy newsletter-unsubscribe\nsupabase functions deploy comment-submit\nsupabase functions deploy article-view\n```\n\nThe service-role key is used only inside Edge Function secrets.
 
 ## SEO and discoverability
 
