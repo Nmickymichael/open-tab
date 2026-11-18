@@ -5,12 +5,14 @@ import {StoryCard} from "@/components/story-card";
 import {NewsletterForm} from "@/components/newsletter-form";
 import {BreakingNews} from "@/components/breaking-news";
 import {PollWidget} from "@/components/poll-widget";
+import {AdSlot} from "@/components/ad-slot";
 export const revalidate=60;
 type Story=any;
 export default async function Home(){
- let stories:Story[]=[];let breaking:Story[]=[];let picks:Story[]=[];let storyOfDay:Story|null=null;let trending:Story[]=[];let weekend:Story[]=[];let topics:any[]=[];
+ let stories:Story[]=[];let breaking:Story[]=[];let picks:Story[]=[];let storyOfDay:Story|null=null;let trending:Story[]=[];let weekend:Story[]=[];let topics:any[]=[];let homepageAd:any=null;
  let categoryCards:{name:string;slug:string;description:string|null}[]=departments.map(name=>({name,slug:name.toLowerCase(),description:departmentDescriptions[name]}));
  if(supabase){
+  const {data:adData}=await supabase.from("active_ad_creatives").select("id,headline,description,creative_url,destination_url,placement").eq("placement","homepage_leaderboard").limit(1).maybeSingle();homepageAd=adData??null;
   const {data:categoryData}=await supabase.from("categories").select("name,slug,description").eq("is_active",true).order("sort_order");if(categoryData?.length)categoryCards=categoryData;
   const base=()=>supabase!.from("articles").select("id,title,slug,excerpt,cover_image,cover_image_alt,published_at,category:categories(name,slug)").eq("status","published").lte("published_at",new Date().toISOString());
   const {data}=await base().order("published_at",{ascending:false}).limit(15);stories=data??[];
@@ -27,6 +29,7 @@ export default async function Home(){
  const lead=storyOfDay||stories[0];
  return <main>
   <BreakingNews items={breaking}/>
+  {homepageAd&&<AdSlot ad={homepageAd}/> }
   <section className="wrap py-8 md:py-12"><div className="flex items-center justify-between mb-5"><span className="eyebrow">The world, opened up</span><span className="text-[10px] font-bold uppercase tracking-widest muted">Independent perspective · Global stories</span></div>
    {lead?<div className="grid md:grid-cols-[1.5fr_1fr] gap-8 items-center"><div className="story-image aspect-[16/10] md:aspect-[4/3]">{lead.cover_image&&<img src={lead.cover_image} alt={lead.cover_image_alt||lead.title}/>}</div><div><div className="eyebrow">{storyOfDay?"Story of the day":"Top story"}</div><h1 className="headline text-5xl md:text-7xl mt-4">{lead.title}</h1><p className="muted leading-7 mt-5">{lead.excerpt}</p><Link className="btn-red mt-6" href={`/story/${lead.slug}`}>Read the story ↗</Link></div></div>:<div className="bg-[#111] text-white p-8 md:p-14"><div className="eyebrow">A new window on the world</div><h1 className="headline text-5xl md:text-8xl leading-[0.95] tracking-tight max-w-4xl mt-5">EVERYTHING INTERESTING. ALL IN ONE PLACE.</h1><p className="text-neutral-300 max-w-xl mt-6 leading-7">Sports, culture, creators, technology, business and the stories shaping our world. Welcome to OPEN TAB.</p><Link className="btn-red mt-7" href="/about">Discover OPEN TAB ↗</Link></div>}
   </section>
