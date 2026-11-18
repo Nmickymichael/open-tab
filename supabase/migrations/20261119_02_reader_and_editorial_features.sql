@@ -150,7 +150,7 @@ create trigger article_revision_snapshot before update on public.articles
 for each row execute function public.capture_article_revision();
 
 create or replace function public.notify_category_followers_on_publish()
-returns trigger language plpgsql security definer set search_path=public as $
+returns trigger language plpgsql security definer set search_path=public as $$
 begin
   if new.status='published' and new.published_at<=now()
      and (tg_op='INSERT' or old.status is distinct from 'published' or old.published_at is distinct from new.published_at) then
@@ -161,7 +161,7 @@ begin
     where rf.category_id=new.category_id;
   end if;
   return new;
-end; $;
+end; $$;
 drop trigger if exists notify_category_followers_after_publish on public.articles;
 create trigger notify_category_followers_after_publish
 after insert or update of status,published_at on public.articles
@@ -200,7 +200,7 @@ language sql stable security definer set search_path=public as $
   where o.poll_id=p_poll_id
   group by o.id
   order by o.sort_order;
-$;
+$$;
 revoke all on function public.get_poll_results(uuid) from public;
 grant execute on function public.get_poll_results(uuid) to anon,authenticated;
 create policy "editors manage polls" on public.reader_polls for all to authenticated using(public.has_editor_access()) with check(public.has_editor_access());
