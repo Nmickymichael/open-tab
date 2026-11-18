@@ -27,9 +27,9 @@ OPEN TAB is an international digital publication covering sports, celebrities, c
    - `supabase/migrations/20261118_engagement_limits.sql`
    - `supabase/migrations/20261118_editorial_audit.sql`
    - `supabase/migrations/20261118_video_publication_policy.sql`
-8. Run `supabase/tests/rls_smoke_test.sql` and complete identity-based tests for anon, author, editor and admin roles.
-6. Create staff accounts through a trusted administrator workflow. New accounts receive the author role only. Promote the first administrator manually from the Supabase SQL editor; never expose role assignment to public clients.
-7. Run `npm run dev`.
+6. Run `supabase/tests/rls_smoke_test.sql` and complete identity-based tests for anon, author, editor and admin roles.
+7. Create staff accounts through a trusted administrator workflow. New accounts receive the author role only. Promote the first administrator manually from the Supabase SQL editor; never expose role assignment to public clients.
+8. Run `npm run dev`.
 
 ## Editorial desk
 
