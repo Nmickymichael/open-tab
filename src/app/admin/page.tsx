@@ -45,7 +45,7 @@ export default function AdminPage(){
     }
     setBusy(false);
   },[session,tab,role]);
-  useEffect(()=>{if(!supabase){setLoading(false);return}supabase.auth.getSession().then(async({data})=>{setSession(data.session);if(data.session){const {data:p}=await supabase.from("profiles").select("role").eq("id",data.session.user.id).maybeSingle();setRole(p?.role||null)}setLoading(false)});const {data:listener}=supabase.auth.onAuthStateChange((_event,next)=>{setSession(next);if(!next){setRole(null)}else{setTimeout(async()=>{const {data:p}=await supabase.from("profiles").select("role").eq("id",next.user.id).maybeSingle();setRole(p?.role||null)},0)}});return()=>listener.subscription.unsubscribe()},[]);
+  useEffect(()=>{const client=supabase;if(!client){setLoading(false);return}client.auth.getSession().then(async({data})=>{setSession(data.session);if(data.session){const {data:p}=await client.from("profiles").select("role").eq("id",data.session.user.id).maybeSingle();setRole(p?.role||null)}setLoading(false)});const {data:listener}=client.auth.onAuthStateChange((_event,next)=>{setSession(next);if(!next){setRole(null)}else{setTimeout(async()=>{const {data:p}=await client.from("profiles").select("role").eq("id",next.user.id).maybeSingle();setRole(p?.role||null)},0)}});return()=>listener.subscription.unsubscribe()},[]);
   useEffect(()=>{if(session&&role)load()},[session,role,load]);
   const filtered=useMemo(()=>rows.filter(r=>JSON.stringify(r).toLowerCase().includes(filter.toLowerCase())),[rows,filter]);
   async function signIn(){if(!supabase)return;setBusy(true);const {error}=await supabase.auth.signInWithPassword({email,password});notify(error?.message||"Sign-in request completed.");setBusy(false)}
