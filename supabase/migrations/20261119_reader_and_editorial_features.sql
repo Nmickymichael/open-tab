@@ -2,7 +2,6 @@
 -- Apply after the existing foundation, hardening and admin-only publishing migrations.
 begin;
 
-alter type public.app_role add value if not exists 'reader';
 alter table public.profiles alter column role set default 'reader';
 create or replace function public.handle_new_user()
 returns trigger language plpgsql security definer set search_path=public as $$
