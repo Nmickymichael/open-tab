@@ -27,6 +27,7 @@ OPEN TAB is an international digital publication covering sports, celebrities, c
    - `supabase/migrations/20261118_engagement_limits.sql`
    - `supabase/migrations/20261118_editorial_audit.sql`
    - `supabase/migrations/20261118_video_publication_policy.sql`
+   - `supabase/migrations/20261118_scheduled_publishing.sql`
 6. Run `supabase/tests/rls_smoke_test.sql` and complete identity-based tests for anon, author, editor and admin roles.
 7. Create staff accounts through a trusted administrator workflow. New accounts receive the author role only. Promote the first administrator manually from the Supabase SQL editor; never expose role assignment to public clients.
 8. Run `npm run dev`.
@@ -51,6 +52,7 @@ Deploy these functions to the dedicated Supabase project:
 
 - `newsletter-subscribe` — validates and rate-limits signup requests, stores pending subscribers, and sends double opt-in confirmation.
 - `newsletter-confirm` — confirms a subscription using its one-time token.
+- `newsletter-unsubscribe` — processes one-click unsubscribe tokens.
 - `comment-submit` — validates and rate-limits public comments before placing them in the moderation queue.
 - `article-view` — records deduplicated story views through a trusted server-side endpoint.
 
