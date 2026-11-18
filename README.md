@@ -52,6 +52,20 @@ The dashboard supports article creation/editing, Markdown article bodies, admin-
 
 The hardening migration creates a public-read `open-tab-media` bucket with an 8 MB image limit and an allowlist of image MIME types. Only editor/admin roles can upload, update or delete media. The browser uses the Supabase anon key and the database role policies; never put a service-role key in client-side code. Stories and videos can be scheduled from the CMS. The scheduler migration attempts to register a one-minute Supabase Cron job; verify that `open-tab-publish-scheduled-content` exists after migration, or configure `public.publish_scheduled_content()` to run every minute in Supabase Cron.
 
+## AI newsroom
+
+- `/admin/ai-newsroom` is an authenticated editorial assistant for story angles, headline/dek options, excerpts, first-draft copy, social captions and a fact-check checklist.
+- The API verifies the Supabase access token and the signed-in profile role before calling the configured OpenAI-compatible chat-completions endpoint. AI output is returned as working material only; it is never published automatically.
+- The assistant does not independently verify live facts or sources. Editors must confirm names, dates, quotes, statistics, claims, rights and links before publication.
+
+Configure these server-side environment variables in the deployment platform (do not commit secrets):
+
+- `OPENAI_API_KEY` — private API key for the chosen compatible provider.
+- `OPENAI_BASE_URL` — optional API base URL; defaults to `https://api.openai.com/v1`.
+- `OPENAI_MODEL` — optional model name; defaults to `gpt-4o-mini`.
+
+The public homepage now gives greater prominence to the lead story, latest headlines, editorial picks, OPEN TAB TV, trending stories, creators, departments and newsletter signup. Video and creator sections appear when their published records are available.
+
 ## Global administration and revenue operations
 
 - `/admin/overview` is the dark, responsive Global Admin control room. It is restricted to the `admin` profile role and summarises publishing, video, reader, comment and article-view activity.
