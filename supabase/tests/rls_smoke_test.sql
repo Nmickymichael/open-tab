@@ -4,11 +4,11 @@
 do $$
 declare missing text;
 begin
-  select string_agg(t, ', ') into missing from unnest(array[
+  select string_agg(tablename, ', ') into missing from unnest(array[
     'profiles','categories','articles','tags','article_tags','creators',
     'videos','newsletter_subscribers','comments','article_views','audit_logs',
     'newsletter_signup_rate_limits','article_view_rate_limits','comment_rate_limits'
-  ]) t where not coalesce((select c.relrowsecurity from pg_class c join pg_namespace n on n.oid=c.relnamespace where n.nspname='public' and c.relname=t),false);
+  ]) as x(tablename) where not coalesce((select c.relrowsecurity from pg_class c join pg_namespace n on n.oid=c.relnamespace where n.nspname='public' and c.relname=tablename),false);
   if missing is not null then raise exception 'RLS is not enabled on: %',missing; end if;
   if exists(select 1 from pg_policies where schemaname='public' and tablename='profiles' and cmd in ('UPDATE','ALL') and roles @> array['authenticated']::name[]) then
     raise exception 'Unsafe profile update policy exists; users must not be able to self-assign roles.';
