@@ -1,0 +1,3 @@
+"use client";
+import {useEffect,useState} from "react";
+export function ThemeToggle(){const[dark,setDark]=useState(false);useEffect(()=>{const saved=localStorage.getItem("open-tab-theme");const enabled=saved==="dark";setDark(enabled);document.documentElement.dataset.theme=enabled?"dark":"light"},[]);function toggle(){const next=!dark;setDark(next);document.documentElement.dataset.theme=next?"dark":"light";localStorage.setItem("open-tab-theme",next?"dark":"light")}return <button type="button" onClick={toggle} className="theme-toggle" aria-label={dark?"Switch to light mode":"Switch to dark mode"}>{dark?"☀ Light":"◐ Dark"}</button>}
