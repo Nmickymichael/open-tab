@@ -25,6 +25,7 @@ OPEN TAB is an international digital publication covering sports, celebrities, c
    - `supabase/schema.sql`
    - `supabase/migrations/20261118_open_tab_hardening.sql`
    - `supabase/migrations/20261118_engagement_limits.sql`
+   - `supabase/migrations/20261118_editorial_audit.sql`
 6. Create staff accounts through a trusted administrator workflow. New accounts receive the author role only. Promote the first administrator manually from the Supabase SQL editor; never expose role assignment to public clients.
 7. Run `npm run dev`.
 
@@ -33,7 +34,7 @@ OPEN TAB is an international digital publication covering sports, celebrities, c
 Visit `/admin`. Public self-registration is disabled. Staff sign in with provisioned Supabase Auth accounts.
 
 - **Authors:** create and edit their own draft/review articles.
-- **Editors:** manage stories, video library, creators, dynamic departments, media, comment moderation and newsroom analytics.
+- **Editors:** manage stories, video library, creators, dynamic departments, media, comment moderation, newsroom analytics and an administrator-only audit trail.
 - **Administrators:** all editor capabilities plus newsletter audience access.
 
 The dashboard supports article creation/editing, Markdown article bodies, publishing status, featured stories, SEO fields, video records, creator profiles, hierarchical categories, image uploads, comment moderation, newsletter audience management and database-backed headline/view counts.
