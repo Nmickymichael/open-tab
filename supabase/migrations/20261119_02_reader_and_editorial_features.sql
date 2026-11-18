@@ -193,7 +193,7 @@ create policy "reader vote once" on public.reader_poll_votes for insert to authe
 with check(user_id=auth.uid() and exists(select 1 from public.reader_polls p where p.id=poll_id and p.is_active and (p.closes_at is null or p.closes_at>now())) and exists(select 1 from public.reader_poll_options o where o.id=reader_poll_votes.option_id and o.poll_id=reader_poll_votes.poll_id));
 create or replace function public.get_poll_results(p_poll_id uuid)
 returns table(option_id uuid,vote_count bigint)
-language sql stable security definer set search_path=public as $
+language sql stable security definer set search_path=public as $$
   select o.id,count(v.id)::bigint
   from public.reader_poll_options o
   left join public.reader_poll_votes v on v.option_id=o.id
