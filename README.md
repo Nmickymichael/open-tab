@@ -29,21 +29,25 @@ OPEN TAB is an international digital publication covering sports, celebrities, c
    - `supabase/migrations/20261118_video_publication_policy.sql`
    - `supabase/migrations/20261118_scheduled_publishing.sql`
    - `supabase/migrations/20261118_article_image_alt.sql`
+   - `supabase/migrations/20261119_01_reader_role.sql`
+   - `supabase/migrations/20261119_02_reader_and_editorial_features.sql`
+   - `supabase/migrations/20261119_03_reader_video_library.sql`
+   - `supabase/migrations/20261119_04_contributor_profiles.sql`
 6. Run `supabase/tests/rls_smoke_test.sql` and complete identity-based tests for anon, author, editor and admin roles.
-7. Create staff accounts through a trusted administrator workflow. New accounts receive the author role only. Promote the first administrator manually from the Supabase SQL editor; never expose role assignment to public clients.
+7. Reader accounts are created at `/account` and receive the restricted `reader` role. Editorial staff accounts must be provisioned through a trusted administrator workflow and promoted to `author`, `editor` or `admin` only by a trusted owner; never expose staff role assignment to public clients. Promote the first administrator manually from the Supabase SQL editor.
 8. Run `npm run dev`.
 
 ## Editorial desk
 
-Visit `/admin`. Public self-registration is disabled. Staff sign in with provisioned Supabase Auth accounts.
+Visit `/admin`. Staff self-registration is disabled; editorial staff sign in with provisioned Supabase Auth accounts. Reader registration is separate at `/account` and does not grant editorial access.
 
 - **Authors:** create and edit their own draft/review articles.
 - **Editors:** manage stories, video library, creators, dynamic departments, media, comment moderation, newsroom analytics and an administrator-only audit trail.
 - **Administrators:** all editor capabilities plus newsletter audience access.
 
-The dashboard supports article creation/editing, Markdown article bodies, publishing status, featured stories, SEO fields, video records, creator profiles, hierarchical categories, image uploads, comment moderation, newsletter audience management and database-backed headline/view counts.
+The dashboard supports article creation/editing, Markdown article bodies, admin-only publishing/scheduling, homepage placement flags (breaking news, story of the day, editor’s pick, weekend read and OPEN TAB Original), SEO fields, video/podcast records and transcripts, creator profiles, hierarchical categories, image uploads, comment moderation, newsletter audience management and database-backed headline/view counts. The protected `/admin/desk` adds writer assignments, due dates, reporting sources, public corrections, poll creation, scheduled-story overview, contributor output and article revision history.
 
-## Media storage
+## Reader experience\n\nReader accounts can save articles, follow categories and creators, react to stories, vote in editorial polls, maintain a video Watch Later queue and view recently watched videos and notifications. Story pages include estimated reading time, adjustable text size, sharing, related stories and public corrections. OPEN TAB includes a breaking-news strip, curated homepage sections, trending stories, weekend reads, topic pages, creator/contributor profiles, video and podcast destinations, dark/light reading mode and an installable offline shell.\n\n## Media storage
 
 The hardening migration creates a public-read `open-tab-media` bucket with an 8 MB image limit and an allowlist of image MIME types. Only editor/admin roles can upload, update or delete media. The browser uses the Supabase anon key and the database role policies; never put a service-role key in client-side code. Stories and videos can be scheduled from the CMS. The scheduler migration attempts to register a one-minute Supabase Cron job; verify that `open-tab-publish-scheduled-content` exists after migration, or configure `public.publish_scheduled_content()` to run every minute in Supabase Cron.
 
@@ -108,7 +112,7 @@ Before opening the site to the public:
 
 ## Editorial departments
 
-Home · Sports · Celebrities · Creators · Entertainment · Technology · Business · Lifestyle · Education · World · Videos · Opinions.
+Home · Sports · Celebrities · Creators · Entertainment · Technology · Business · Lifestyle · Education · World · Videos · Opinions · OPEN TAB Originals.
 
 Categories and subcategories are database-managed and can be created from the editorial desk.
 
