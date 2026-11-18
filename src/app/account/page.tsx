@@ -1,0 +1,4 @@
+import type {Metadata} from "next";
+import {ReaderAccount} from "@/components/reader-account";
+export const metadata:Metadata={title:"Reader account",description:"Manage your OPEN TAB reader account and saved stories."};
+export default function AccountPage(){return <main className="wrap py-12 min-h-[55vh]"><div className="eyebrow">OPEN TAB / Reader membership</div><h1 className="headline text-6xl md:text-8xl mt-4">YOUR SPACE<span className="accent">.</span></h1><p className="muted max-w-xl mt-4 mb-10">Save the stories you love and take your reading list wherever you go.</p><ReaderAccount/></main>}
