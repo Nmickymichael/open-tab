@@ -86,7 +86,7 @@ The app includes dynamic sitemap generation, a robots policy, canonical story UR
 
 ## Security notes / launch checklist
 
-This repository is a substantially expanded implementation, but it has **not yet been connected to a live Supabase project, deployed, or independently security-certified**.
+This repository is a substantially expanded implementation, but it has **not yet been connected to a live Supabase project, deployed, or independently security-certified**. The GitHub Actions typecheck/build workflow is included, but a successful CI run has not yet been confirmed.
 
 Before opening the site to the public:
 
