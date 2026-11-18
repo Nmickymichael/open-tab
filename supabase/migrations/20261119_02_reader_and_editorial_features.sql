@@ -148,6 +148,24 @@ drop trigger if exists article_revision_snapshot on public.articles;
 create trigger article_revision_snapshot before update on public.articles
 for each row execute function public.capture_article_revision();
 
+create or replace function public.notify_category_followers_on_publish()
+returns trigger language plpgsql security definer set search_path=public as $
+begin
+  if new.status='published' and new.published_at<=now()
+     and (tg_op='INSERT' or old.status is distinct from 'published' or old.published_at is distinct from new.published_at) then
+    insert into public.reader_notifications(user_id,title,body,href)
+    select rf.user_id,'New story in '||coalesce(c.name,'a followed topic'),new.title,'/story/'||new.slug
+    from public.reader_follows rf
+    left join public.categories c on c.id=rf.category_id
+    where rf.category_id=new.category_id;
+  end if;
+  return new;
+end; $;
+drop trigger if exists notify_category_followers_after_publish on public.articles;
+create trigger notify_category_followers_after_publish
+after insert or update of status,published_at on public.articles
+for each row execute function public.notify_category_followers_on_publish();
+
 alter table public.reader_bookmarks enable row level security;
 alter table public.reader_follows enable row level security;
 alter table public.article_reactions enable row level security;
