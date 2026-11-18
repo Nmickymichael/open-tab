@@ -16,6 +16,7 @@ alter table public.articles
   add column if not exists is_story_of_day boolean not null default false,
   add column if not exists is_editors_pick boolean not null default false,
   add column if not exists is_weekend_read boolean not null default false,
+  add column if not exists is_original boolean not null default false,
   add column if not exists reading_time_minutes integer not null default 1,
   add column if not exists correction_note text;
 alter table public.videos
