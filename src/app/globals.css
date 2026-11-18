@@ -13,10 +13,10 @@
 html[data-theme="dark"]{--ink:#f3f1ec;--paper:#141414;--muted:#aaa;--line:#373737;background:var(--paper);color:var(--ink)}
 html[data-theme="dark"] body{background:var(--paper);color:var(--ink)}
 html[data-theme="dark"] .bg-white{background:#202020;color:#f3f1ec}
-html[data-theme="dark"] .bg-\\[\\#e9e7e1\\]{background:#202020}
+html[data-theme="dark"] .bg-\[\#e9e7e1\]{background:#202020}
 html[data-theme="dark"] .border-neutral-300{border-color:#3a3a3a}
 html[data-theme="dark"] .article-content{color:#e7e4de}
-html[data-theme="dark"] .article-content blockquote{color:#bbb}
+html[data-theme="dark"] .article-content blockquote{color:#bbb}\nhtml[data-theme="dark"] .article-content code{background:#303030}
 html[data-theme="dark"] .account-input{color:#fff}
 html[data-theme="dark"] .poll-card{background:#1d1d1d}
 html[data-theme="dark"] .correction-note{background:#242424}
