@@ -1,3 +1,4 @@
+import {FeedImage} from "@/components/feed-image";
 import Link from "next/link";
 import {notFound} from "next/navigation";
 export const revalidate=300;
