@@ -1,70 +1,14 @@
 import type {Metadata} from "next";
 import Link from "next/link";
 import {FeedImage} from "@/components/feed-image";
+import {GLOBAL_NEWS_SOURCES} from "@/lib/global-news-sources";
 export const revalidate = 600;
 export const metadata:Metadata = {
   title:"Latest World News",
   description:"The latest international headlines from trusted newsrooms around the world, with links to original reporting."
 };
-type FeedSource={name:string;url:string;region:string};
 type NewsItem={title:string;url:string;description:string;date:string;source:string;region:string;image:string|null};
-const SOURCES:FeedSource[]=[
-  {name:"BBC News",url:"https://feeds.bbci.co.uk/news/world/rss.xml",region:"United Kingdom · Global"},
-  {name:"NPR",url:"https://feeds.npr.org/1004/rss.xml",region:"United States · World"},
-  {name:"Al Jazeera",url:"https://www.aljazeera.com/xml/rss/all.xml",region:"Qatar · Global"},
-  {name:"DW",url:"https://rss.dw.com/rdf/rss-en-world",region:"Germany · World"},
-  {name:"France 24",url:"https://www.france24.com/en/rss",region:"France · Global"},
-  {name:"The Guardian",url:"https://www.theguardian.com/world/rss",region:"United Kingdom · World"},
-  {name:"Africanews",url:"https://www.africanews.com/feed/rss",region:"Pan-African · Africa"},
-  {name:"BBC Africa",url:"https://feeds.bbci.co.uk/news/world/africa/rss.xml",region:"United Kingdom · Africa"},
-  {name:"France 24 Africa",url:"https://www.france24.com/en/africa/rss",region:"France · Africa"},
-  {name:"The Africa Report",url:"https://www.theafricareport.com/feed/",region:"Pan-African · Africa"},
-  {name:"AllAfrica",url:"https://allafrica.com/tools/headlines/rdf/latest/headlines.rdf",region:"Pan-African · Africa"},
-  {name:"Daily Nation",url:"https://nation.africa/kenya/rss.xml",region:"Kenya · East Africa"},
-  {name:"The EastAfrican",url:"https://www.theeastafrican.co.ke/tea/rss",region:"East Africa"},
-  {name:"Premium Times",url:"https://www.premiumtimesng.com/feed",region:"Nigeria · West Africa"},
-  {name:"Vanguard Nigeria",url:"https://www.vanguardngr.com/feed/",region:"Nigeria · West Africa"},
-  {name:"Channels Television",url:"https://www.channelstv.com/feed/",region:"Nigeria · West Africa"},
-  {name:"MyJoyOnline",url:"https://www.myjoyonline.com/feed/",region:"Ghana · West Africa"},
-  {name:"News24",url:"https://feeds.news24.com/articles/news24/TopStories/rss",region:"South Africa · Southern Africa"},
-  {name:"Daily Maverick",url:"https://www.dailymaverick.co.za/feed/",region:"South Africa · Southern Africa"},
-  {name:"The New Times",url:"https://www.newtimes.co.rw/rss",region:"Rwanda · East Africa"},
-  {name:"The Reporter Ethiopia",url:"https://www.thereporterethiopia.com/feed/",region:"Ethiopia · Horn of Africa"},
-  {name:"Radio Okapi",url:"https://www.radiookapi.net/rss.xml",region:"DR Congo · Central Africa"},
-  {name:"Sudan Tribune",url:"https://sudantribune.com/spip.php?page=backend",region:"Sudan · Northeast Africa"},
-  {name:"The New York Times",url:"https://rss.nytimes.com/services/xml/rss/nyt/HomePage.xml",region:"United States · Global"},
-  {name:"AP News via Flipboard",url:"https://flipboard.com/@associatedpress/top-stories-u7govdf1z.rss",region:"United States · Global"},
-  {name:"NBC News",url:"https://feeds.nbcnews.com/nbcnews/public/news",region:"United States · Global"},
-  {name:"CBS News",url:"https://www.cbsnews.com/latest/rss/main",region:"United States · Global"},
-  {name:"ABC News",url:"https://abcnews.com/abcnews/topstories",region:"United States · Global"},
-  {name:"Fox News",url:"https://moxie.foxnews.com/google-publisher/latest.xml",region:"United States · Global"},
-  {name:"Sky News",url:"https://feeds.skynews.com/feeds/rss/home.xml",region:"United Kingdom · Global"},
-  {name:"The Independent",url:"https://www.independent.co.uk/news/rss",region:"United Kingdom · Global"},
-  {name:"Euronews",url:"https://www.euronews.com/rss",region:"Europe · Global"},
-  {name:"India Today",url:"https://www.indiatoday.in/rss/home",region:"India · South Asia"},
-  {name:"NDTV",url:"https://feeds.feedburner.com/ndtvnews-top-stories",region:"India · South Asia"},
-  {name:"Times of India",url:"https://timesofindia.indiatimes.com/rssfeedstopstories.cms",region:"India · South Asia"},
-  {name:"CNBC",url:"https://www.cnbc.com/id/100003114/device/rss/rss.html",region:"United States · Business"},
-  {name:"Variety",url:"https://variety.com/feed/",region:"United States · Entertainment"},
-  {name:"People",url:"https://people.com/feed/",region:"United States · Entertainment"},
-  {name:"Google News",url:"https://news.google.com/rss?hl=en-US&gl=US&ceid=US:en",region:"Global · Aggregated headlines"},
-  {name:"Reuters via Google News",url:"https://news.google.com/rss/search?q=site%3Areuters.com&hl=en&gl=US&ceid=US:en",region:"Global · Wire reporting"},
-  {name:"CNN via Google News",url:"https://news.google.com/rss/search?q=site%3Acnn.com&hl=en&gl=US&ceid=US:en",region:"United States · Global"},
-  {name:"MSN via Google News",url:"https://news.google.com/rss/search?q=site%3Amsn.com&hl=en&gl=US&ceid=US:en",region:"Global · Aggregated headlines"},
-  {name:"WSJ via Google News",url:"https://news.google.com/rss/search?q=site%3Awsj.com&hl=en&gl=US&ceid=US:en",region:"United States · Business"},
-  {name:"The Standard",url:"https://www.standardmedia.co.ke/rss/headlines.php",region:"Kenya · East Africa"},
-  {name:"The Standard Politics",url:"https://www.standardmedia.co.ke/rss/politics.php",region:"Kenya · East Africa"},
-  {name:"Capital FM Kenya",url:"https://capitalfm.africa/news/feed/",region:"Kenya · East Africa"},
-  {name:"Taifa Leo",url:"https://taifaleo.nation.co.ke/feed",region:"Kenya · Kiswahili"},
-  {name:"Ghafla",url:"https://ghafla.co.ke/ke/feed/",region:"Kenya · Entertainment"},
-  {name:"Tuko via Google News",url:"https://news.google.com/rss/search?q=site%3Atuko.co.ke&hl=en-KE&gl=KE&ceid=KE%3Aen",region:"Kenya · East Africa"},
-  {name:"Citizen Digital via Google News",url:"https://news.google.com/rss/search?q=site%3Acitizen.digital&hl=en-KE&gl=KE&ceid=KE%3Aen",region:"Kenya · East Africa"},
-  {name:"Pulse Live Kenya via Google News",url:"https://news.google.com/rss/search?q=site%3Apulselive.co.ke&hl=en-KE&gl=KE&ceid=KE%3Aen",region:"Kenya · Entertainment"},
-  {name:"The Star Kenya via Google News",url:"https://news.google.com/rss/search?q=site%3Athe-star.co.ke&hl=en-KE&gl=KE&ceid=KE%3Aen",region:"Kenya · East Africa"},
-  {name:"Mpasho via Google News",url:"https://news.google.com/rss/search?q=site%3Ampasho.co.ke&hl=en-KE&gl=KE&ceid=KE%3Aen",region:"Kenya · Entertainment"},
-  {name:"Business Daily Africa via Google News",url:"https://news.google.com/rss/search?q=site%3Abusinessdailyafrica.com&hl=en-KE&gl=KE&ceid=KE%3Aen",region:"Kenya · Business"},
-  {name:"Kenyans.co.ke",url:"https://www.kenyans.co.ke/rss.xml",region:"Kenya · East Africa"}
-];
+const SOURCES=GLOBAL_NEWS_SOURCES;
 const entities:Record<string,string>={amp:"&",quot:'"',apos:"'",lt:"<",gt:">",nbsp:" ",ndash:"–",mdash:"—",rsquo:"’",lsquo:"‘",rdquo:"”",ldquo:"“",hellip:"…",copy:"©",reg:"®",trade:"™"};
 function decode(value:string){return value.replace(/&(#x[0-9a-f]+|#\\d+|[a-z][a-z0-9]+);/gi,(entity,key:string)=>{if(key[0]==="#"){const hex=key[1]?.toLowerCase()==="x";const n=parseInt(key.slice(hex?2:1),hex?16:10);try{return Number.isFinite(n)&&n>0&&n<=0x10ffff?String.fromCodePoint(n):" "}catch{return" "}}return entities[key.toLowerCase()]??entity})}
 function clean(value:string){let out=value.replace(/<!\[CDATA\[([\s\S]*?)\]\]>/g,"$1");for(let i=0;i<2;i++)out=decode(out);return out.replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi," ").replace(/<style\b[^>]*>[\s\S]*?<\/style>/gi," ").replace(/<[^>]*>/g," ").replace(/\s+/g," ").trim()}
