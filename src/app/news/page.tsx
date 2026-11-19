@@ -1,7 +1,7 @@
 import type {Metadata} from "next";
 import Link from "next/link";
 import {FeedImage} from "@/components/feed-image";
-export const revalidate = 300;
+export const revalidate = 600;
 export const metadata:Metadata = {
   title:"Latest World News",
   description:"The latest international headlines from trusted newsrooms around the world, with links to original reporting."
@@ -73,7 +73,7 @@ function linkOf(block:string){const atom=block.match(/<link[^>]+href=["']([^"']+
 function imageOf(block:string){const match=block.match(/<(?:media:thumbnail|media:content|enclosure)[^>]+(?:url|href)=["']([^"']+)["']/i)||block.match(/<img[^>]+src=["']([^"']+)["']/i);return match?.[1]?decode(match[1]):null;}
 async function readFeed(source:FeedSource):Promise<NewsItem[]>{
   try{
-    const response=await fetch(source.url,{headers:{"user-agent":"OPEN TAB Newsroom/1.0 (+https://opentab-media.netlify.app)"},signal:AbortSignal.timeout(9000),next:{revalidate:300}});
+    const response=await fetch(source.url,{headers:{"user-agent":"OPEN TAB Newsroom/1.0 (+https://opentab-media.netlify.app)"},signal:AbortSignal.timeout(9000),next:{revalidate:600}});
     if(!response.ok)return [];
     const xml=await response.text();
     const blocks=[...xml.matchAll(/<(item|entry)\b[\s\S]*?<\/\1>/gi)].map(m=>m[0]);
@@ -95,7 +95,7 @@ export default async function NewsPage(){
     <div className="eyebrow">OPEN TAB · WORLD DESK · LIVE RSS ROUNDUP</div>
     <div className="mt-4 flex flex-wrap items-end justify-between gap-4"><div><h1 className="headline text-6xl md:text-8xl">WORLD NEWS<span className="accent">.</span></h1><p className="muted mt-4 max-w-2xl text-sm leading-7">The latest headlines from trusted newsrooms across Africa and the world. Follow reporting from East, West, Central, North and Southern Africa alongside major international stories.</p></div><span className="border border-neutral-400 px-3 py-2 text-[10px] font-black uppercase tracking-widest">{items.length} headlines · auto-refreshes</span></div>
     <div className="mt-8 flex flex-wrap gap-2">{SOURCES.map(s=><span key={s.name} className="pill">{s.name}</span>)}</div>
-    <div className="section-rule mt-10 mb-6 flex items-center justify-between"><h2 className="text-2xl font-black">LATEST INTERNATIONAL HEADLINES</h2><span className="muted text-[10px] uppercase tracking-widest">Updated every 5 minutes</span></div>
+    <div className="section-rule mt-10 mb-6 flex items-center justify-between"><h2 className="text-2xl font-black">LATEST INTERNATIONAL HEADLINES</h2><span className="muted text-[10px] uppercase tracking-widest">Updated every 10 minutes</span></div>
     {items.length?<div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">{items.map((item,i)=><article key={item.url} className="overflow-hidden border border-neutral-300">
       {item.image?<Link href={readerUrl(item)} className="block"><FeedImage src={item.image} alt={item.title}/></Link>:<Link href={readerUrl(item)} className="flex aspect-video items-center justify-center bg-[#171717] text-5xl font-black text-white">OT<span className="accent">.</span></Link>}
       <div className="p-5"><div className="flex flex-wrap items-center justify-between gap-2"><span className="eyebrow">{item.source}</span><span className="muted text-[9px]">{timeLabel(item.date)}</span></div><Link href={readerUrl(item)}><h2 className="mt-3 text-xl font-black leading-tight hover:text-[#f04438]">{item.title}</h2></Link>{item.description&&<p className="muted mt-3 text-sm leading-6">{item.description}</p>}<p className="muted mt-4 text-[9px] font-bold uppercase tracking-widest">{item.region}</p><div className="mt-5 flex flex-wrap gap-4 text-[10px] font-black uppercase tracking-widest"><Link href={readerUrl(item)} className="text-[#f04438]">Read in OPEN TAB ↗</Link><a href={item.url} target="_blank" rel="noopener noreferrer" className="underline">Read original report ↗</a></div></div>
