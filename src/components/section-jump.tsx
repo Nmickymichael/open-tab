@@ -1,0 +1,3 @@
+import Link from "next/link";
+type Item={label:string;href:string;active?:boolean};
+export function SectionJump({items}:{items:Item[]}){return <nav aria-label="Quick section navigation" className="my-5 flex flex-wrap gap-2">{items.map(item=><Link key={item.label} href={item.href} aria-current={item.active?"page":undefined} className={item.active?"pill border-[#f04438] text-[#f04438]":"pill hover:border-[#f04438] hover:text-[#f04438]"}>{item.label}</Link>)}</nav>}
