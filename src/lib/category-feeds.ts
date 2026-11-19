@@ -80,6 +80,8 @@ export async function getLiveCategoryStories(slug:string):Promise<LiveCategorySt
  });
  await Promise.all(workers);
  const [gdelt,newsdata]=await Promise.all([getGdeltStories(slug),getNewsDataStories(slug)]);
- const combined=deduplicateStories([...batches.flat(),...gdelt,...newsdata]);\n const prioritized=slug==="sports"?prioritizeSportsStories(combined):combined;\n const items=prioritized.slice(0,60);
+ const combined=deduplicateStories([...batches.flat(),...gdelt,...newsdata]);
+ const prioritized=slug==="sports"?prioritizeSportsStories(combined):combined;
+ const items=prioritized.slice(0,60);
  return fillMissingArticleImages(items);
 }
