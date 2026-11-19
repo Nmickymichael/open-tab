@@ -4,9 +4,10 @@ import Link from "next/link";
 import {supabase} from "@/lib/supabase";
 import {LocalSaveShare} from "@/components/local-save-share";
 import {cleanVideoDescription} from "@/lib/video-description";
+import {isEnglishVideo} from "@/lib/english-video";
 export const revalidate=300;
 type Props={params:Promise<{slug:string}>};
-async function getReview(slug:string){if(!supabase)return null;const {data}=await supabase.from("videos").select("*,creator:creators(name,slug,channel_url)").eq("slug",slug).eq("is_watch_review",true).eq("status","published").lte("published_at",new Date().toISOString()).maybeSingle();return data;}
+async function getReview(slug:string){if(!supabase)return null;const {data}=await supabase.from("videos").select("*,creator:creators(name,slug,channel_url)").eq("slug",slug).eq("is_watch_review",true).eq("status","published").lte("published_at",new Date().toISOString()).maybeSingle();return data&&isEnglishVideo(data)?data:null;}
 export async function generateMetadata({params}:Props):Promise<Metadata>{const {slug}=await params;const v=await getReview(slug);return{title:v?.title||"OPEN TAB WATCH",description:cleanVideoDescription(v?.description)||"Watch the video on OPEN TAB.",openGraph:{images:v?.thumbnail_url?[v.thumbnail_url]:[]}}}
 export default async function WatchReviewPage({params}:Props){
  const {slug}=await params;const v=await getReview(slug);if(!v)return notFound();
@@ -14,8 +15,8 @@ export default async function WatchReviewPage({params}:Props){
  const teaser=cleanVideoDescription(v.description)||"Press play and enjoy this video, right here on OPEN TAB.";
  const shortTeaser=teaser.length>150?teaser.slice(0,147).replace(/\s+\S*$/,"")+"…":teaser;
  const videoOnly=(v.watch_category||"").toLowerCase()==="movies"||/trailer|teaser/i.test(v.title||"");
- const relatedQuery=supabase!.from("videos").select("id,title,slug,thumbnail_url,watch_category,creator_display_name,creator:creators(name)").eq("is_watch_review",true).eq("status","published").lte("published_at",new Date().toISOString()).neq("id",v.id).order("published_at",{ascending:false}).limit(4);
- const {data:related}=v.watch_category?await relatedQuery.eq("watch_category",v.watch_category):await relatedQuery;
+ const relatedQuery=supabase!.from("videos").select("id,title,slug,thumbnail_url,watch_category,creator_display_name,creator:creators(name)").eq("is_watch_review",true).eq("status","published").lte("published_at",new Date().toISOString()).neq("id",v.id).order("published_at",{ascending:false}).limit(20);
+ const {data:relatedRows}=v.watch_category?await relatedQuery.eq("watch_category",v.watch_category):await relatedQuery;\n const related=(relatedRows??[]).filter((item:any)=>isEnglishVideo(item)).slice(0,4);
  return <main className="wrap max-w-5xl py-8 md:py-12">
   <Link href="/watch" className="pill inline-flex">← Back to OPEN TAB WATCH</Link>
   <div className="eyebrow mt-6">{videoOnly?"OPEN TAB TV":"OPEN TAB WATCH"}</div>
