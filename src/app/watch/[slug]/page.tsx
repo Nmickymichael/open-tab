@@ -16,7 +16,8 @@ export default async function WatchReviewPage({params}:Props){
  const shortTeaser=teaser.length>150?teaser.slice(0,147).replace(/\s+\S*$/,"")+"…":teaser;
  const videoOnly=(v.watch_category||"").toLowerCase()==="movies"||/trailer|teaser/i.test(v.title||"");
  const relatedQuery=supabase!.from("videos").select("id,title,slug,thumbnail_url,watch_category,creator_display_name,creator:creators(name)").eq("is_watch_review",true).eq("status","published").lte("published_at",new Date().toISOString()).neq("id",v.id).order("published_at",{ascending:false}).limit(20);
- const {data:relatedRows}=v.watch_category?await relatedQuery.eq("watch_category",v.watch_category):await relatedQuery;\n const related=(relatedRows??[]).filter((item:any)=>isEnglishVideo(item)).slice(0,4);
+ const {data:relatedRows}=v.watch_category?await relatedQuery.eq("watch_category",v.watch_category):await relatedQuery;
+ const related=(relatedRows??[]).filter((item:any)=>isEnglishVideo(item)).slice(0,4);
  return <main className="wrap max-w-5xl py-8 md:py-12">
   <Link href="/watch" className="pill inline-flex">← Back to OPEN TAB WATCH</Link>
   <div className="eyebrow mt-6">{videoOnly?"OPEN TAB TV":"OPEN TAB WATCH"}</div>
