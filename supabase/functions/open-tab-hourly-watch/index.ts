@@ -13,6 +13,8 @@ const PRIORITY_CREATORS = [
 ];
 function genreForVideo(video:any):string {
   const text=[video.snippet?.title,video.snippet?.description,video.snippet?.channelTitle].join(" ").toLowerCase();
+  if(/\b(podcast|podcasts|full episode|podcast episode|talk show|interview|long-form conversation|bible study podcast|christian podcast|faith podcast|theology podcast)\b/.test(text)) return "Podcasts";
+  if(/\b(car build|car builds|car modification|modified car|car restoration|automotive restoration|engine rebuild|house renovation|home renovation|home building|building a house|construction project|workshop build|workshop tour|woodworking|maker build|diy project|renovation project|3d printing)\b/.test(text)) return "DIY & Builds";
   if(/\b(mrwhosetheboss|mkbhd|marques brownlee|unbox therapy|linus tech tips|dave2d|tech review|smartphone|gadget|iphone|android|laptop)\b/.test(text)) return "Technology";
   if(/\b(mrbeast|challenge|last to|24 hour challenge|hide and seek|survive)\b/.test(text)) return "Viral Culture";
   if(/\b(animation|animator|animated|cartoon)\b/.test(text)) return "Animation";
@@ -67,7 +69,7 @@ function discoveryScore(item:{video:any;regions:Set<string>;ranks:number[]}):num
   // English is enforced before scoring; retain a small metadata preference for explicit en tags.
   const englishBoost=language.startsWith("en")?10:0;
   return item.regions.size*100 + Math.log10(Math.max(views,1))*8 +
-    (51-averageRank)*0.25 + creatorPriority(item.video)*24 + englishBoost;
+    (51-averageRank)*0.25 + creatorPriority(item.video)*42 + (item.searchTopics?.length??0)*12 + englishBoost;
 }
 const json = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), { status, headers: { "Content-Type":"application/json", "Cache-Control":"no-store" } });
@@ -133,7 +135,27 @@ Deno.serve(async (req: Request) => {
     viewRefreshErrors.push("network");
   }
 
-  const byId = new Map<string, { video:any; regions:Set<string>; ranks:number[] }>();
+  // One rotating targeted YouTube search per hourly run; hydrate up to 50 IDs in one batch.
+  // This expands topic coverage without per-video API calls or additional database tables.
+  const DISCOVERY_QUERIES = [
+    {label:"automotive builds and restorations",query:"car builds modifications restoration rebuild project"},
+    {label:"house renovation and construction",query:"house renovation home building construction project"},
+    {label:"workshop and maker builds",query:"workshop build woodworking maker DIY project"},
+    {label:"DIY projects",query:"DIY home improvement project tutorial build"},
+    {label:"Bible and Christian podcasts",query:"Bible Christian podcast episode interview"},
+    {label:"faith and theology podcasts",query:"faith theology Christian podcast conversation"},
+    {label:"interviews and talk shows",query:"English interview talk show podcast episode"},
+    {label:"technology and culture podcasts",query:"technology culture podcast interview episode"},
+    {label:"technology reviews",query:"tech review smartphone laptop gadget comparison"},
+    {label:"English technology reviewers",query:"Mrwhosetheboss MKBHD tech review"},
+    {label:"MrBeast and English creator videos",query:"MrBeast challenge English creator video"},
+    {label:"music videos and performances",query:"official music video live performance"},
+    {label:"gaming videos",query:"gaming gameplay walkthrough"},
+    {label:"playable games",query:"interactive game playable browser game"},
+    {label:"movies and short films",query:"movie trailer short film film"}
+  ];
+  const discoveryQuery=DISCOVERY_QUERIES[new Date().getUTCHours()%DISCOVERY_QUERIES.length];
+  const byId = new Map<string, { video:any; regions:Set<string>; ranks:number[]; searchTopics:string[] }>();
   const regionErrors:string[] = viewRefreshErrors.map(error=>"view-count-refresh:"+error);
   for (const region of REGIONS) {
     const url = new URL("https://www.googleapis.com/youtube/v3/videos");
@@ -146,7 +168,7 @@ Deno.serve(async (req: Request) => {
       const payload = await response.json();
       (payload.items ?? []).forEach((video:any, index:number) => {
         if (!video.id || !video.snippet?.title || !video.snippet?.channelTitle) return;
-        const item = byId.get(video.id) ?? { video, regions:new Set<string>(), ranks:[] };
+        const item = byId.get(video.id) ?? { video, regions:new Set<string>(), ranks:[], searchTopics:[] };
         item.regions.add(region);
         item.ranks.push(index + 1);
         const currentViews = Number(item.video.statistics?.viewCount ?? 0);
@@ -157,9 +179,43 @@ Deno.serve(async (req: Request) => {
     } catch { regionErrors.push(region + ":network"); }
   }
 
+  // Targeted search rotates one category each hour, avoiding expensive multi-query bursts.
+  try {
+    const searchUrl=new URL("https://www.googleapis.com/youtube/v3/search");
+    searchUrl.search=new URLSearchParams({
+      part:"snippet",type:"video",order:"viewCount",maxResults:"50",
+      q:discoveryQuery.query,relevanceLanguage:"en",regionCode:"US",key:youtubeKey
+    }).toString();
+    const searchResponse=await fetch(searchUrl);
+    if(!searchResponse.ok) regionErrors.push("targeted-search:"+searchResponse.status);
+    else {
+      const searchPayload=await searchResponse.json();
+      const ids=[...new Set((searchPayload.items??[]).map((item:any)=>String(item.id?.videoId??"")).filter(Boolean))].slice(0,50);
+      if(ids.length){
+        const detailsUrl=new URL("https://www.googleapis.com/youtube/v3/videos");
+        detailsUrl.search=new URLSearchParams({part:"snippet,statistics",id:ids.join(","),key:youtubeKey}).toString();
+        const detailsResponse=await fetch(detailsUrl);
+        if(!detailsResponse.ok) regionErrors.push("targeted-details:"+detailsResponse.status);
+        else {
+          const details=await detailsResponse.json();
+          (details.items??[]).forEach((video:any,index:number)=>{
+            if(!video.id||!video.snippet?.title||!video.snippet?.channelTitle)return;
+            const item=byId.get(video.id)??{video,regions:new Set<string>(),ranks:[],searchTopics:[]};
+            const existingViews=Number(item.video.statistics?.viewCount??0);
+            const candidateViews=Number(video.statistics?.viewCount??0);
+            if(candidateViews>existingViews)item.video=video;
+            if(!item.searchTopics.includes(discoveryQuery.label))item.searchTopics.push(discoveryQuery.label);
+            item.ranks.push(51+index);
+            byId.set(video.id,item);
+          });
+        }
+      }
+    }
+  } catch { regionErrors.push("targeted-search:network"); }
+
   const candidates = [...byId.values()]
     // Keep every chart market eligible, but only publish videos with English language metadata/text.
-    .filter(x => x.regions.size >= 1 && Number(x.video.statistics?.viewCount ?? 0) >= 500000 && isEnglishCandidate(x.video))
+    .filter(x => (x.regions.size >= 1 || x.searchTopics.length > 0) && Number(x.video.statistics?.viewCount ?? 0) >= 100000 && isEnglishCandidate(x.video))
     .sort((a,b) => discoveryScore(b)-discoveryScore(a));
 
   const published:any[] = [];
@@ -181,6 +237,10 @@ Deno.serve(async (req: Request) => {
     const title = String(video.snippet.title).slice(0,240);
     const channel = String(video.snippet.channelTitle).slice(0,160);
     const regions = [...candidate.regions].sort();
+    const searchTopics = [...new Set(candidate.searchTopics??[])];
+    const discoverySignal = regions.length
+      ? "YouTube's most popular charts in "+regions.join(", ")
+      : "targeted YouTube search for "+searchTopics.join(", ");
     const category = genreForVideo(video);
     // Genre is descriptive metadata only; no category or creator caps.
     const source = "https://www.youtube.com/watch?v="+id;
@@ -189,10 +249,11 @@ Deno.serve(async (req: Request) => {
       video.snippet.thumbnails?.high?.url ??
       "https://i.ytimg.com/vi/"+id+"/hqdefault.jpg";
     const description = "OPEN TAB WATCH trend spotlight. This original video by "+channel+
-      " appeared in YouTube's most popular charts in "+regions.join(", ")+
+      " was discovered through "+discoverySignal+
       ". Follow the source link to watch the original upload and support its creator.";
-    const why = "YouTube chart signal: this video appeared in the most popular charts across "+
-      regions.join(", ")+". It was selected for multi-market visibility, not an unverified claim of universal popularity.";
+    const why = regions.length
+      ? "YouTube chart signal: this video appeared in the most popular charts across "+regions.join(", ")+". It was selected for multi-market visibility, not an unverified claim of universal popularity."
+      : "Discovery signal: this video surfaced in targeted YouTube search for "+searchTopics.join(", ")+". Selection requires the 100,000-view minimum and English-language screening.";
     const verdict = "Trend spotlight, not a full content review. Selection is based on public YouTube chart placement and metadata; OPEN TAB has not independently assessed every claim or the full video's quality.";
     const payload = {
       title, slug:slugify(title)+"-"+id.slice(0,6).toLowerCase(),
@@ -212,5 +273,5 @@ Deno.serve(async (req: Request) => {
     published.push({title, youtube_id:id, creator:channel, category, regions, url:source, row:inserted[0] ?? null});
   }
   if (published.length) return json({published:true, count:published.length, items:published, regionErrors});
-  return json({published:false, reason:"No eligible new chart-discovery video passed the view threshold and duplicate check.", candidatesChecked:candidates.length, regionErrors});
+  return json({published:false, reason:"No eligible chart or targeted-search video passed the English screen, 100,000-100,000-view threshold and duplicate check.", candidatesChecked:candidates.length, regionErrors});
 });
