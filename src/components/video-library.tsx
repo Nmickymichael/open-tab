@@ -10,19 +10,31 @@ type VideoItem={
 };
 
 function getViews(video:VideoItem):number|null{
- const candidates=[video.view_count,video.views,video.youtube_view_count,video.viewCount,video.views_count];
+ const candidates=[
+  video.view_count,video.views,video.youtube_view_count,video.viewCount,video.views_count,
+  video.statistics?.viewCount,video.statistics?.view_count,
+  video.stats?.views,video.stats?.viewCount,
+  video.youtube?.statistics?.viewCount,
+  video.view_count_text,video.viewCountText,video.views_text
+ ];
  for(const value of candidates){
   if(typeof value==="number"&&Number.isFinite(value)&&value>=0)return value;
   if(typeof value==="string"&&value.trim()!==""){
-   const parsed=Number(value.replace(/,/g,"").trim());
+   const text=value.trim().replace(/,/g,"");
+   const match=text.match(/^([\\d.]+)\\s*([KMB])?\\s*(?:views?)?$/i);
+   if(match){
+    const amount=Number(match[1]);
+    const multiplier=({K:1e3,M:1e6,B:1e9} as Record<string,number>)[(match[2]||"").toUpperCase()]||1;
+    if(Number.isFinite(amount)&&amount>=0)return Math.round(amount*multiplier);
+   }
+   const parsed=Number(text);
    if(Number.isFinite(parsed)&&parsed>=0)return parsed;
   }
  }
  return null;
 }
-
 function formatViews(value:number|null):string{
- return value===null?"Views unavailable":`${new Intl.NumberFormat("en",{notation:"compact",maximumFractionDigits:1}).format(value)} views`;
+ return value===null?"":`${new Intl.NumberFormat("en",{notation:"compact",maximumFractionDigits:1}).format(value)} views`;
 }
 
 export function VideoLibrary({videos}:{videos:VideoItem[]}){
@@ -55,7 +67,7 @@ export function VideoLibrary({videos}:{videos:VideoItem[]}){
      <h3 className="mt-3 text-xl font-black group-hover:text-[#f04438]">{video.title}</h3>
      <div className="mt-2 flex flex-wrap items-center justify-between gap-2">
       <p className="muted text-xs">{video.creator?.slug?<span className="accent">{video.creator.name}</span>:video.creator?.name||"OPEN TAB"}</p>
-      <p className="muted text-xs" title={views===null?"View count not supplied by the video source":views.toLocaleString()+" views"}>◉ {formatViews(views)}</p>
+      {views!==null&&<p className="muted text-xs" title={views.toLocaleString()+" views"}>◉ {formatViews(views)}</p>}
      </div>
     </Link>;
    })}
