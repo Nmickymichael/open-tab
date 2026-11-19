@@ -7,6 +7,7 @@ import { ArticleView } from "@/components/article-view";
 import { ReaderActions } from "@/components/reader-actions";
 import { ReaderControls } from "@/components/reader-controls";
 import { readingTime } from "@/components/reading-time";
+import { MovieRating } from "@/components/movie-rating";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 
@@ -94,7 +95,7 @@ export default async function StoryPage({ params }: StoryParams) {
     image: story.cover_image ? [{ "@type": "ImageObject", url: story.cover_image, creditText: story.cover_image_credit || undefined, license: story.cover_image_license_url || story.cover_image_license || undefined, acquireLicensePage: story.cover_image_source || undefined }] : undefined,
     datePublished: story.published_at,
     dateModified: story.updated_at,
-    author: { "@type": "Person", name: author?.display_name || "OPEN TAB Editorial" },
+    author: { "@type": "Person", name: author?.display_name || story.author_display_name || "OPEN TAB Editorial" },
     publisher: { "@type": "Organization", name: "OPEN TAB" },
     mainEntityOfPage: base + "/story/" + story.slug,
   };
@@ -107,7 +108,7 @@ export default async function StoryPage({ params }: StoryParams) {
       <h1 className="headline text-4xl md:text-7xl mt-5">{story.title}</h1>
       {story.excerpt && <p className="text-xl md:text-2xl muted leading-relaxed mt-6">{story.excerpt}</p>}
       <div className="text-xs muted mt-5">
-        By {author?.id ? <Link className="accent font-bold" href={"/contributors/" + author.id}>{author.display_name || "OPEN TAB Contributor"}</Link> : author?.display_name || "OPEN TAB Editorial"}
+        By {author?.id ? <Link className="accent font-bold" href={"/contributors/" + author.id}>{author.display_name || "OPEN TAB Contributor"}</Link> : story.author_display_name || author?.display_name || "OPEN TAB Editorial"}
         {" · "}{minutes} min read · A Mickoryn Media publication
       </div>
       <ReaderActions articleId={story.id} title={story.title} />
@@ -134,6 +135,7 @@ export default async function StoryPage({ params }: StoryParams) {
         </div>) : <p className="muted mt-3 text-sm">No comments yet. Start the conversation.</p>}
       </section>
       <CommentForm articleId={story.id} />
+      {category?.slug === "movies" ? <MovieRating articleId={story.id} /> : null}
       {related?.length ? <section className="mt-14">
         <div className="section-rule mb-6"><h2 className="font-black text-2xl">MORE LIKE THIS</h2></div>
         <div className="grid sm:grid-cols-3 gap-6">
