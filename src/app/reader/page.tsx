@@ -14,7 +14,7 @@ export default async function ReaderPage({searchParams}:{searchParams:Promise<{u
  const showImage=!!(image&&imageCredit&&imageLicense);
  const back=p.back&&(p.back==="/news"||p.back.startsWith("/category/"))?p.back:"/";
  let next:NextItem[]=[];try{const parsed=JSON.parse(p.next||"[]");if(Array.isArray(parsed))next=parsed.slice(0,3).flatMap((item:any)=>{const u=safeUrl(String(item?.url||""));const t=text(String(item?.title||""));const s=text(String(item?.source||""));return u&&t?[{url:u,title:t,source:s}]:[]})}catch{}
- const overview="This OPEN TAB overview is an independent orientation to the subject raised by the headline. It does not reproduce the publisher’s lead or article wording; consult the original report for its reporting, evidence, updates and full context.";
+ const overview="This report from "+source+" focuses on the development identified in the headline. OPEN TAB keeps this page to an independent, high-level introduction rather than recreating the publisher’s lead or article; consult the original report for verified details, evidence, updates and full context.";
  return <main className="wrap max-w-4xl py-8 md:py-12">
   <Link href={back} className="pill inline-flex">← Back</Link>
   <div className="eyebrow mt-8">OPEN TAB READER · EXTERNAL REPORT</div>
