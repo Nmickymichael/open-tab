@@ -48,10 +48,13 @@ function genreFor(video:VideoItem):string{
 
 
 function laneFor(video:VideoItem):string{
+ const text=[video.title,video.description,video.watch_category,video.creator?.name,video.creator_display_name].join(" ").toLowerCase();
  const category=genreFor(video);
- const text=[video.title,video.description,video.watch_category].join(" ").toLowerCase();
- if(video.video_type==="podcast"||category==="Podcasts")return "Podcasts";
- if(/\\b(playable|playables|interactive game|browser game|play in browser|game demo)\\b/.test(text))return "Playables";
+ // Prefer specific content formats/topics over stale or broad stored genres.
+ if(video.video_type==="podcast"||category==="Podcasts"||/\b(podcast|podcasts|full episode|podcast episode|talk show|interview|long-form conversation|bible study podcast|christian podcast|faith podcast|theology podcast)\b/.test(text))return "Podcasts";
+ if(/\b(car build|car builds|car modification|modified car|car restoration|automotive restoration|engine rebuild|house renovation|home renovation|home building|building a house|construction project|workshop build|workshop tour|woodworking|maker build|diy project|renovation project|3d printing)\b/.test(text))return "Building";
+ if(/\b(mrwhosetheboss|mkbhd|marques brownlee|unbox therapy|linus tech tips|dave2d|tech review|smartphone|phone review|laptop review|gadget review|android|iphone|consumer technology)\b/.test(text))return "Tech";
+ if(/\b(playable|playables|interactive game|browser game|play in browser|game demo)\b/.test(text))return "Playables";
  if(category==="Music")return "Music";
  if(category==="Gaming")return "Gaming";
  if(["Movies","Animation","Film & Video"].includes(category))return "Movies";
