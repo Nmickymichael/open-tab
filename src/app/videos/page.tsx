@@ -11,8 +11,8 @@ export default async function Videos(){
   const result=await supabase.from("videos").select("*,creator:creators(name,slug)").eq("status","published").lte("published_at",new Date().toISOString()).order("published_at",{ascending:false}).limit(240);
   if(result.error){
    const fallback=await supabase.from("videos").select("*,creator:creators(name,slug)").eq("status","published").lte("published_at",new Date().toISOString()).order("published_at",{ascending:false}).limit(30);
-   items=(fallback.data??[]).filter((v:any)=>v.video_type!=="podcast"&&isEnglishVideo(v));
-   podcasts=(fallback.data??[]).filter((v:any)=>v.video_type==="podcast"&&isEnglishVideo(v));
+   items=(fallback.data??[]).filter((v:any)=>v.video_type!=="podcast"&&v.watch_category!=="Podcasts"&&isEnglishVideo(v));
+   podcasts=(fallback.data??[]).filter((v:any)=>(v.video_type==="podcast"||v.watch_category==="Podcasts")&&isEnglishVideo(v));
   }else{
    items=(result.data??[]).filter((v:any)=>v.video_type!=="podcast"&&isEnglishVideo(v));
    podcasts=(result.data??[]).filter((v:any)=>v.video_type==="podcast"&&isEnglishVideo(v));
