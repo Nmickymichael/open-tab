@@ -1,6 +1,6 @@
 import type {Metadata} from "next";
 import Link from "next/link";
-import {FeedImage} from "@/components/feed-image";
+import {NewsroomBrowser} from "@/components/newsroom-browser";
 import {FeedFreshness} from "@/components/feed-freshness";
 import {GLOBAL_NEWS_SOURCES} from "@/lib/global-news-sources";
 export const revalidate = 600;
@@ -34,8 +34,6 @@ async function readFeed(source:FeedSource):Promise<NewsItem[]>{
     });
   }catch{return [];}
 }
-function readerUrl(item:NewsItem,nextItems:NewsItem[]=[]){const q=new URLSearchParams({url:item.url,title:item.title,source:item.source,date:timeLabel(item.date),back:"/news"});const next=nextItems.filter(x=>x.url!==item.url).slice(0,3).map(x=>({url:x.url,title:x.title,source:x.source}));if(next.length)q.set("next",JSON.stringify(next));if(item.image){q.set("image",item.image);if(item.imageCredit)q.set("imageCredit",item.imageCredit);if(item.imageLicense)q.set("imageLicense",item.imageLicense);if(item.imageSource)q.set("imageSource",item.imageSource)}return "/reader?"+q.toString()}
-function timeLabel(value:string){const date=new Date(value);return Number.isNaN(date.getTime())?"Latest":new Intl.DateTimeFormat("en",{dateStyle:"medium",timeStyle:"short",timeZone:"UTC"}).format(date)+" UTC";}
 export default async function NewsPage(){
   const results=await Promise.all(SOURCES.map(readFeed));
   const seen=new Set<string>();
@@ -43,12 +41,8 @@ export default async function NewsPage(){
   return <main className="wrap min-h-[60vh] py-10 md:py-14">
     <div className="eyebrow">OPEN TAB · WORLD DESK · LIVE RSS ROUNDUP</div>
     <div className="mt-4 flex flex-wrap items-end justify-between gap-4"><div><h1 className="headline text-6xl md:text-8xl">WORLD NEWS<span className="accent">.</span></h1><p className="muted mt-4 max-w-2xl text-sm leading-7">The latest headlines from trusted newsrooms across Africa and the world. Follow reporting from East, West, Central, North and Southern Africa alongside major international stories.</p></div><span className="border border-neutral-400 px-3 py-2 text-[10px] font-black uppercase tracking-widest">{items.length} headlines · auto-refreshes</span></div>
-    <div className="mt-8 flex flex-wrap gap-2">{SOURCES.map(s=><span key={s.name} className="pill">{s.name}</span>)}</div>
-    <div className="section-rule mt-10 mb-6 flex flex-wrap items-center justify-between gap-3"><h2 className="text-2xl font-black">LATEST INTERNATIONAL HEADLINES</h2><div className="flex flex-col items-start gap-1"><FeedFreshness label="World news"/><span className="muted text-[9px] uppercase tracking-widest">Feed cache: 10 minutes</span></div></div>
-    {items.length?<div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">{items.map((item,i)=><article key={item.url} className="overflow-hidden border border-neutral-300">
-      {item.image?<Link href={readerUrl(item,items)} className="block"><FeedImage src={item.image} alt={item.title}/><p className="muted px-5 pt-2 text-[10px]">{item.imageCredit?`Photo: ${item.imageCredit}`:`Image supplied via ${item.source} feed`}{item.imageLicense?` · ${item.imageLicense}`:""}</p></Link>:<Link href={readerUrl(item,items)} className="flex aspect-video items-center justify-center bg-[#171717] text-5xl font-black text-white">OT<span className="accent">.</span></Link>}
-      <div className="p-5"><div className="flex flex-wrap items-center justify-between gap-2"><span className="eyebrow">{item.source}</span><span className="muted text-[9px]">{timeLabel(item.date)}</span></div><Link href={readerUrl(item,items)}><h2 className="mt-3 text-xl font-black leading-tight hover:text-[#f04438]">{item.title}</h2></Link><p className="muted mt-4 text-[9px] font-bold uppercase tracking-widest">{item.region}</p><div className="mt-5 flex flex-wrap gap-4 text-[10px] font-black uppercase tracking-widest"><Link href={readerUrl(item,items)} className="text-[#f04438]">Read in OPEN TAB ↗</Link></div></div>
-    </article>)}</div>:<div className="border border-dashed border-neutral-400 p-10 text-center"><h2 className="font-black">Live feeds are temporarily unavailable</h2><p className="muted mt-2 text-sm">Please try again shortly. OPEN TAB links readers to each publisher's original reporting.</p></div>}
+    <div className="section-rule mt-8 mb-6 flex flex-wrap items-center justify-between gap-3"><div className="flex flex-col items-start gap-1"><FeedFreshness label="World news"/><span className="muted text-[9px] uppercase tracking-widest">Feed cache: 10 minutes</span></div><span className="muted text-[10px] font-black uppercase tracking-widest">Select a newsroom to filter headlines</span></div>
+    <NewsroomBrowser items={items} sources={SOURCES}/>
     <p className="muted mt-10 border-t border-neutral-300 pt-5 text-xs leading-6">OPEN TAB uses clean headline metadata to introduce external reporting. Publisher leads and article text are not reproduced in the reader; supporting photos are shown when the publisher feed supplies an image URL; source attribution is displayed where available.</p>
   </main>;
 }
