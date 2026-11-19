@@ -59,7 +59,7 @@ Deno.serve(async (req: Request) => {
   const published:any[] = [];
   const categoryCounts = new Map<string,number>();
   for (const candidate of candidates) {
-    if (published.length >= 8) break;
+
     const video = candidate.video;
     const id = String(video.id);
     const duplicateUrl = new URL(supabaseUrl + "/rest/v1/videos");
@@ -76,7 +76,7 @@ Deno.serve(async (req: Request) => {
     const channel = String(video.snippet.channelTitle).slice(0,160);
     const regions = [...candidate.regions].sort();
     const category = CATEGORY[String(video.snippet.categoryId)] ?? "Viral Culture";
-    if ((categoryCounts.get(category) ?? 0) >= 2) continue;
+    if ((categoryCounts.get(category) ?? 0) >= 4) continue;
     const source = "https://www.youtube.com/watch?v="+id;
     const thumbnail = video.snippet.thumbnails?.maxres?.url ??
       video.snippet.thumbnails?.standard?.url ??
