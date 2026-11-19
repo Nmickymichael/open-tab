@@ -29,3 +29,7 @@ html[data-theme="dark"] .correction-note{background:#242424}
 .nav-loop-group{display:flex;flex:0 0 auto;align-items:center;gap:22px;padding-right:22px;white-space:nowrap}
 .nav-loop-group a{flex:0 0 auto;white-space:nowrap}
 @media(max-width:640px){.nav-loop-group{gap:17px;padding-right:17px}.nav-infinite{padding-top:15px;padding-bottom:15px}}
+
+/* Comfortable one-thumb targets on reader and filter controls. */
+.reader-actions .pill,.pill{min-height:40px;padding:9px 13px;display:inline-flex;align-items:center;justify-content:center;gap:6px}
+@media(max-width:640px){.reader-actions{gap:8px}.reader-actions .pill,.pill{min-height:44px;padding:11px 14px}.reader-actions a{min-height:44px;display:inline-flex;align-items:center}.section-rule{scroll-margin-top:18px}}
