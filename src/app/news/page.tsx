@@ -1,4 +1,6 @@
 import type {Metadata} from "next";
+import Link from "next/link";
+import {FeedImage} from "@/components/feed-image";
 export const revalidate = 300;
 export const metadata:Metadata = {
   title:"Latest World News",
@@ -63,8 +65,9 @@ const SOURCES:FeedSource[]=[
   {name:"Business Daily Africa via Google News",url:"https://news.google.com/rss/search?q=site%3Abusinessdailyafrica.com&hl=en-KE&gl=KE&ceid=KE%3Aen",region:"Kenya · Business"},
   {name:"Kenyans.co.ke",url:"https://www.kenyans.co.ke/rss.xml",region:"Kenya · East Africa"}
 ];
-function decode(value:string){return value.replace(/<!\[CDATA\[([\s\S]*?)\]\]>/g,"$1").replace(/&amp;/g,"&").replace(/&quot;/g,'"').replace(/&#39;|&apos;/g,"'").replace(/&lt;/g,"<").replace(/&gt;/g,">").trim();}
-function clean(value:string){return decode(value.replace(/<[^>]*>/g," ").replace(/\s+/g," "));}
+const entities:Record<string,string>={amp:"&",quot:'"',apos:"'",lt:"<",gt:">",nbsp:" ",ndash:"–",mdash:"—",rsquo:"’",lsquo:"‘",rdquo:"”",ldquo:"“",hellip:"…",copy:"©",reg:"®",trade:"™"};
+function decode(value:string){return value.replace(/&(#x[0-9a-f]+|#\\d+|[a-z][a-z0-9]+);/gi,(entity,key:string)=>{if(key[0]==="#"){const hex=key[1]?.toLowerCase()==="x";const n=parseInt(key.slice(hex?2:1),hex?16:10);try{return Number.isFinite(n)&&n>0&&n<=0x10ffff?String.fromCodePoint(n):" "}catch{return" "}}return entities[key.toLowerCase()]??entity})}
+function clean(value:string){let out=value.replace(/<!\\[CDATA\\[([\\s\\S]*?)\\]\\]>/g,"$1");for(let i=0;i<2;i++)out=decode(out);return out.replace(/<script\\b[^>]*>[\\s\\S]*?<\\/script>/gi," ").replace(/<style\\b[^>]*>[\\s\\S]*?<\\/style>/gi," ").replace(/<[^>]*>/g," ").replace(/\\s+/g," ").trim()}
 function tag(block:string,name:string){const escaped=name.replace(":","\\:");const match=block.match(new RegExp("<"+escaped+"(?:\\s[^>]*)?>([\\s\\S]*?)<\\/"+escaped+">","i"));return match?.[1]?clean(match[1]):"";}
 function linkOf(block:string){const atom=block.match(/<link[^>]+href=["']([^"']+)["'][^>]*\/?\s*>/i);if(atom?.[1])return decode(atom[1]);const link=tag(block,"link");return link||tag(block,"guid");}
 function imageOf(block:string){const match=block.match(/<(?:media:thumbnail|media:content|enclosure)[^>]+(?:url|href)=["']([^"']+)["']/i)||block.match(/<img[^>]+src=["']([^"']+)["']/i);return match?.[1]?decode(match[1]):null;}
@@ -82,6 +85,7 @@ async function readFeed(source:FeedSource):Promise<NewsItem[]>{
     });
   }catch{return [];}
 }
+function readerUrl(item:NewsItem){const q=new URLSearchParams({url:item.url,title:item.title,summary:item.description.slice(0,1200),source:item.source,back:"/news"});if(item.image)q.set("image",item.image);return "/reader?"+q.toString()}
 function timeLabel(value:string){const date=new Date(value);return Number.isNaN(date.getTime())?"Latest":new Intl.DateTimeFormat("en",{dateStyle:"medium",timeStyle:"short",timeZone:"UTC"}).format(date)+" UTC";}
 export default async function NewsPage(){
   const results=await Promise.all(SOURCES.map(readFeed));
@@ -93,8 +97,8 @@ export default async function NewsPage(){
     <div className="mt-8 flex flex-wrap gap-2">{SOURCES.map(s=><span key={s.name} className="pill">{s.name}</span>)}</div>
     <div className="section-rule mt-10 mb-6 flex items-center justify-between"><h2 className="text-2xl font-black">LATEST INTERNATIONAL HEADLINES</h2><span className="muted text-[10px] uppercase tracking-widest">Updated every 5 minutes</span></div>
     {items.length?<div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">{items.map((item,i)=><article key={item.url} className="overflow-hidden border border-neutral-300">
-      {item.image?<a href={item.url} target="_blank" rel="noopener noreferrer" className="story-image block aspect-video"><img src={item.image} alt="" loading="lazy"/></a>:<div className="flex aspect-video items-center justify-center bg-[#171717] text-5xl font-black text-white">OT<span className="accent">.</span></div>}
-      <div className="p-5"><div className="flex flex-wrap items-center justify-between gap-2"><span className="eyebrow">{item.source}</span><span className="muted text-[9px]">{timeLabel(item.date)}</span></div><h2 className="mt-3 text-xl font-black leading-tight">{item.title}</h2>{item.description&&<p className="muted mt-3 text-sm leading-6">{item.description}</p>}<p className="muted mt-4 text-[9px] font-bold uppercase tracking-widest">{item.region}</p><a href={item.url} target="_blank" rel="noopener noreferrer" className="mt-5 inline-flex text-[10px] font-black uppercase tracking-widest text-[#f04438]">Read original report ↗</a></div>
+      {item.image?<Link href={readerUrl(item)} className="block"><FeedImage src={item.image} alt={item.title}/></Link>:<Link href={readerUrl(item)} className="flex aspect-video items-center justify-center bg-[#171717] text-5xl font-black text-white">OT<span className="accent">.</span></Link>}
+      <div className="p-5"><div className="flex flex-wrap items-center justify-between gap-2"><span className="eyebrow">{item.source}</span><span className="muted text-[9px]">{timeLabel(item.date)}</span></div><Link href={readerUrl(item)}><h2 className="mt-3 text-xl font-black leading-tight hover:text-[#f04438]">{item.title}</h2></Link>{item.description&&<p className="muted mt-3 text-sm leading-6">{item.description}</p>}<p className="muted mt-4 text-[9px] font-bold uppercase tracking-widest">{item.region}</p><div className="mt-5 flex flex-wrap gap-4 text-[10px] font-black uppercase tracking-widest"><Link href={readerUrl(item)} className="text-[#f04438]">Read in OPEN TAB ↗</Link><a href={item.url} target="_blank" rel="noopener noreferrer" className="underline">Read original report ↗</a></div></div>
     </article>)}</div>:<div className="border border-dashed border-neutral-400 p-10 text-center"><h2 className="font-black">Live feeds are temporarily unavailable</h2><p className="muted mt-2 text-sm">Please try again shortly. OPEN TAB links readers to each publisher's original reporting.</p></div>}
     <p className="muted mt-10 border-t border-neutral-300 pt-5 text-xs leading-6">Headlines, short feed excerpts and images are supplied by the respective publishers' public RSS feeds. All reporting remains the property of its original publisher. OPEN TAB does not reproduce full articles; select a headline to read the complete report at its source.</p>
   </main>;
