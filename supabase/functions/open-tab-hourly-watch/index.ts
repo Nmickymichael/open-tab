@@ -136,7 +136,7 @@ Deno.serve(async (req: Request) => {
 
   const candidates = [...byId.values()]
     // Keep videos from every chart market and language eligible.
-    .filter(x => x.regions.size >= 1 && Number(x.video.statistics?.viewCount ?? 0) >= 10000)
+    .filter(x => x.regions.size >= 1 && Number(x.video.statistics?.viewCount ?? 0) >= 500000)
     .sort((a,b) => discoveryScore(b)-discoveryScore(a));
 
   const published:any[] = [];
