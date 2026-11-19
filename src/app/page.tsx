@@ -9,6 +9,7 @@ import {AdSlot} from "@/components/ad-slot";
 import {FeedImage} from "@/components/feed-image";
 import {getLiveCategoryStories} from "@/lib/category-feeds";
 import {FeedFreshness} from "@/components/feed-freshness";
+import {HomeStoryStrip} from "@/components/home-story-strip";
 
 export const revalidate=600;
 type Story=any;
@@ -45,8 +46,14 @@ export default async function Home(){
  const newsReaderUrl=(item:{url:string;title:string;description:string;source:string;image:string|null;imageCredit:string|null;imageLicense:string|null;imageSource:string|null},nextItems:any[]=[] )=>{const q=new URLSearchParams({url:item.url,title:item.title,source:item.source,back:"/news"});const next=nextItems.filter(x=>x.url!==item.url).slice(0,3).map(x=>({url:x.url,title:x.title,source:x.source}));if(next.length)q.set("next",JSON.stringify(next));if(item.image){q.set("image",item.image);if(item.imageCredit)q.set("imageCredit",item.imageCredit);if(item.imageLicense)q.set("imageLicense",item.imageLicense);if(item.imageSource)q.set("imageSource",item.imageSource)}return "/reader?"+q.toString()};
  const lead=storyOfDay||stories[0];
  const sideStories=stories.filter(s=>s.id!==lead?.id).slice(0,3);
+ const storyStripItems=[
+  ...[...stories,...picks].map((item:any)=>({id:"story-"+item.id,title:item.title,href:"/story/"+item.slug,image:item.cover_image||null,label:item.category?.name||"OPEN TAB",kind:"story" as const})),
+  ...externalTrending.map((item:any)=>({id:"feed-"+item.url,title:item.title,href:newsReaderUrl(item,externalTrending),image:item.image||null,label:item.source||"WORLD NEWS",kind:"story" as const})),
+  ...videos.map((item:any)=>({id:"video-"+item.id,title:item.title,href:"/videos/"+item.slug,image:item.thumbnail_url||(item.youtube_id?"https://i.ytimg.com/vi/"+item.youtube_id+"/hqdefault.jpg":null),label:item.video_type||"WATCH",kind:"video" as const}))
+ ].filter((item,index,all)=>all.findIndex(other=>other.href===item.href)===index).slice(0,14);
  return <main>
   <BreakingNews items={breaking}/>
+  <HomeStoryStrip items={storyStripItems}/>
   {homepageAd&&<AdSlot ad={homepageAd}/>}
   <section className="bg-[#101010] text-white">
    <div className="wrap py-5 flex flex-wrap items-center justify-between gap-3 border-b border-neutral-800"><span className="eyebrow">Independent perspective · Global stories</span><span className="text-[9px] font-bold uppercase tracking-[.18em] text-neutral-500">A Mickoryn Media publication</span></div>
