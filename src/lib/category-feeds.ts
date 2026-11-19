@@ -1,6 +1,6 @@
 import {GLOBAL_NEWS_SOURCES} from "@/lib/global-news-sources";
 export type LiveCategoryStory={title:string;url:string;description:string;source:string;date:string;image:string|null;imageCredit:string|null;imageLicense:string|null;imageSource:string|null;sourceRegion?:string|null;corroboratingSources?:string[];verificationStatus?:"single-source"|"multi-source"};
-const feeds:Record<string,{name:string;url:string}[]> = {
+const feeds:Record<string,{name:string;url:string;region?:string}[]> = {
  sports:[{name:"BBC Sport",url:"https://feeds.bbci.co.uk/sport/rss.xml?edition=int"},{name:"ESPN",url:"https://www.espn.com/espn/rss/news"},{name:"Sky Sports",url:"https://www.skysports.com/rss/12040"}],
  celebrities:[{name:"People",url:"https://people.com/feed/"},{name:"Variety",url:"https://variety.com/feed/"},{name:"The Guardian",url:"https://www.theguardian.com/tv-and-radio/rss"}],
  creators:[{name:"Tubefilter",url:"https://www.tubefilter.com/feed/"},{name:"Social Media Today",url:"https://www.socialmediatoday.com/feeds/news/"},{name:"The Verge",url:"https://www.theverge.com/rss/index.xml"}],
@@ -15,7 +15,7 @@ const feeds:Record<string,{name:string;url:string}[]> = {
  "viral-culture":[{name:"BuzzFeed",url:"https://www.buzzfeed.com/index.xml"},{name:"Social Media Today",url:"https://www.socialmediatoday.com/feeds/news/"},{name:"The Verge",url:"https://www.theverge.com/rss/index.xml"}],
  education:[{name:"BBC Science",url:"https://feeds.bbci.co.uk/news/science_and_environment/rss.xml"},{name:"The Guardian Education",url:"https://www.theguardian.com/education/rss"},{name:"Nature",url:"https://www.nature.com/subjects/education.rss"}],
  world:[{name:"BBC World",url:"https://feeds.bbci.co.uk/news/world/rss.xml"},{name:"Al Jazeera",url:"https://www.aljazeera.com/xml/rss/all.xml"},{name:"The Guardian World",url:"https://www.theguardian.com/world/rss"}],
- news:[...GLOBAL_NEWS_SOURCES.map(({name,url})=>({name,url}))]
+ news:[...GLOBAL_NEWS_SOURCES.map(({name,url,region})=>({name,url,region}))]
 };
 const namedEntities:Record<string,string>={amp:"&",lt:"<",gt:">",quot:'"',apos:"'",nbsp:" ",ndash:"–",mdash:"—",rsquo:"’",lsquo:"‘",rdquo:"”",ldquo:"“",hellip:"…",copy:"©",reg:"®",trade:"™",euro:"€",pound:"£",cent:"¢",bull:"•",middot:"·",times:"×",divide:"÷"};
 function decodeEntities(value:string){return value.replace(/&(#x[0-9a-f]+|#\d+|[a-z][a-z0-9]+);/gi,(entity,key:string)=>{if(key[0]==="#"){const hex=key[1]?.toLowerCase()==="x";const n=parseInt(key.slice(hex?2:1),hex?16:10);try{return Number.isFinite(n)&&n>0&&n<=0x10ffff?String.fromCodePoint(n):" "}catch{return" "}}return namedEntities[key.toLowerCase()]??entity})}
@@ -70,7 +70,7 @@ export async function getLiveCategoryStories(slug:string):Promise<LiveCategorySt
     const blocks=[...xml.matchAll(/<(item|entry)\b[^>]*>([\s\S]*?)<\/\1>/gi)].map(m=>m[2]);
     const parsed=blocks.slice(0,12).map(block=>{
      const link=tag(block,"link")||block.match(/<link[^>]+href=["']([^"']+)["']/i)?.[1]||"";
-     return{title:tag(block,"title"),url:link,description:clean(tag(block,"description")||tag(block,"summary")||tag(block,"content:encoded")),source:source.name,date:tag(block,"pubDate")||tag(block,"published")||tag(block,"updated"),image:image(block),imageCredit:imageCredit(block),imageLicense:imageLicense(block),imageSource:imageSource(block),sourceRegion:null};
+     return{title:tag(block,"title"),url:link,description:clean(tag(block,"description")||tag(block,"summary")||tag(block,"content:encoded")),source:source.name,date:tag(block,"pubDate")||tag(block,"published")||tag(block,"updated"),image:image(block),imageCredit:imageCredit(block),imageLicense:imageLicense(block),imageSource:imageSource(block),sourceRegion:source.region||null};
     }).filter(x=>x.title&&/^https?:\/\//i.test(x.url));
     batches.push(parsed);
    }catch{/* One unavailable publisher must not block the wider newsroom. */}
