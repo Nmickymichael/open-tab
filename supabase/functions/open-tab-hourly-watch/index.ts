@@ -11,8 +11,8 @@ const PRIORITY_CREATORS = [
   "linus tech tips","veritasium","mark rober","dude perfect","emma chamberlain",
   "casey neistat","jacksepticeye","pewdiepie","sidemen","colin and samir"
 ];
-const EXCLUDED_CONTENT = /\\b(bollywood|hindi|bhojpuri|tamil|telugu|tollywood|kollywood|mollywood|sandalwood|punjabi song|desi song|indian movie|indian film|hindi dubbed|hindi song|south indian movie|full movie hindi|serial episode)\\b/i;
-const NON_LATIN_REGIONAL = /[\\u0900-\\u097F\\u0980-\\u09FF\\u0B80-\\u0BFF\\u0C00-\\u0C7F\\u0C80-\\u0CFF\\u0D00-\\u0D7F]/;
+const EXCLUDED_CONTENT = /\b(bollywood|hindi|bhojpuri|tamil|telugu|tollywood|kollywood|mollywood|sandalwood|punjabi song|desi song|indian movie|indian film|hindi dubbed|hindi song|south indian movie|full movie hindi|serial episode)\b/i;
+const NON_LATIN_REGIONAL = /[\u0900-\u097F\u0980-\u09FF\u0B80-\u0BFF\u0C00-\u0C7F\u0C80-\u0CFF\u0D00-\u0D7F]/;
 function isEnglishCreatorVideo(video:any):boolean {
   const snippet=video.snippet??{};
   const language=String(snippet.defaultAudioLanguage??snippet.defaultLanguage??"").toLowerCase();
@@ -23,27 +23,27 @@ function isEnglishCreatorVideo(video:any):boolean {
 }
 function genreForVideo(video:any):string {
   const text=[video.snippet?.title,video.snippet?.description,video.snippet?.channelTitle].join(" ").toLowerCase();
-  if(/\\b(mrwhosetheboss|mkbhd|marques brownlee|unbox therapy|linus tech tips|dave2d|tech review|smartphone|gadget|iphone|android|laptop)\\b/.test(text)) return "Technology";
-  if(/\\b(mrbeast|challenge|last to|24 hour challenge|hide and seek|survive)\\b/.test(text)) return "Viral Culture";
-  if(/\\b(animation|animator|animated|cartoon)\\b/.test(text)) return "Animation";
-  if(/\\b(makeup|beauty|skincare|haircare)\\b/.test(text)) return "Beauty";
-  if(/\\b(comedy|funny|stand.?up|sketch)\\b/.test(text)) return "Comedy";
-  if(/\\b(commentary|reaction|opinion|explained|discourse)\\b/.test(text)) return "Commentary";
-  if(/\\b(review|reviewed|comparison|unboxing|first look|critique)\\b/.test(text)) return "Reviews";
-  if(/\\b(diy|build|maker|woodworking|3d print|restoration|craft)\\b/.test(text)) return "DIY & Builds";
-  if(/\\b(science|experiment|education|learn|physics|engineering|documentary)\\b/.test(text)) return "Education & Science";
-  if(/\\b(fashion|style|outfit|lookbook)\\b/.test(text)) return "Fashion";
-  if(/\\b(short film|filmmaking|cinematography|behind the scenes)\\b/.test(text)) return "Film & Video";
-  if(/\\b(recipe|cooking|cook with|food|baking|chef)\\b/.test(text)) return "Food";
-  if(/\\b(gameplay|gaming|minecraft|fortnite|roblox|gta|playthrough|esports)\\b/.test(text)) return "Gaming";
-  if(/\\b(fitness|workout|training|gym|health)\\b/.test(text)) return "Health & Fitness";
-  if(/\\b(lifestyle|routine|day in my life|home tour)\\b/.test(text)) return "Lifestyle";
-  if(/\\b(music|official video|live performance|song|album|cover)\\b/.test(text)) return "Music";
-  if(/\\b(news|election|breaking|report|current affairs)\\b/.test(text)) return "News";
-  if(/\\b(soccer|football|basketball|tennis|nba|nfl|match highlights)\\b/.test(text)) return "Sports";
-  if(/\\b(podcast|episode|interview|conversation)\\b/.test(text)) return "Podcasts";
-  if(/\\b(vlog|travel diary|weekly vlog)\\b/.test(text)) return "Vlogging";
-  if(/\\b(artist|illustration|painting|drawing|design)\\b/.test(text)) return "Art & Design";
+  if(/\b(mrwhosetheboss|mkbhd|marques brownlee|unbox therapy|linus tech tips|dave2d|tech review|smartphone|gadget|iphone|android|laptop)\b/.test(text)) return "Technology";
+  if(/\b(mrbeast|challenge|last to|24 hour challenge|hide and seek|survive)\b/.test(text)) return "Viral Culture";
+  if(/\b(animation|animator|animated|cartoon)\b/.test(text)) return "Animation";
+  if(/\b(makeup|beauty|skincare|haircare)\b/.test(text)) return "Beauty";
+  if(/\b(comedy|funny|stand.?up|sketch)\b/.test(text)) return "Comedy";
+  if(/\b(commentary|reaction|opinion|explained|discourse)\b/.test(text)) return "Commentary";
+  if(/\b(review|reviewed|comparison|unboxing|first look|critique)\b/.test(text)) return "Reviews";
+  if(/\b(diy|build|maker|woodworking|3d print|restoration|craft)\b/.test(text)) return "DIY & Builds";
+  if(/\b(science|experiment|education|learn|physics|engineering|documentary)\b/.test(text)) return "Education & Science";
+  if(/\b(fashion|style|outfit|lookbook)\b/.test(text)) return "Fashion";
+  if(/\b(short film|filmmaking|cinematography|behind the scenes)\b/.test(text)) return "Film & Video";
+  if(/\b(recipe|cooking|cook with|food|baking|chef)\b/.test(text)) return "Food";
+  if(/\b(gameplay|gaming|minecraft|fortnite|roblox|gta|playthrough|esports)\b/.test(text)) return "Gaming";
+  if(/\b(fitness|workout|training|gym|health)\b/.test(text)) return "Health & Fitness";
+  if(/\b(lifestyle|routine|day in my life|home tour)\b/.test(text)) return "Lifestyle";
+  if(/\b(music|official video|live performance|song|album|cover)\b/.test(text)) return "Music";
+  if(/\b(news|election|breaking|report|current affairs)\b/.test(text)) return "News";
+  if(/\b(soccer|football|basketball|tennis|nba|nfl|match highlights)\b/.test(text)) return "Sports";
+  if(/\b(podcast|episode|interview|conversation)\b/.test(text)) return "Podcasts";
+  if(/\b(vlog|travel diary|weekly vlog)\b/.test(text)) return "Vlogging";
+  if(/\b(artist|illustration|painting|drawing|design)\b/.test(text)) return "Art & Design";
   return CATEGORY[String(video.snippet?.categoryId)] ?? "Viral Culture";
 }
 function creatorPriority(video:any):number {
