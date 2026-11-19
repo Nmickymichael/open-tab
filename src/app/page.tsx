@@ -25,6 +25,7 @@ export default async function Home(){
    supabase.from("articles").select("id,title,slug,excerpt,cover_image,cover_image_alt,published_at,category:categories(name,slug)").eq("status","published").eq("is_weekend_read",true).lte("published_at",new Date().toISOString()).order("published_at",{ascending:false}).limit(3),
    supabase.from("tags").select("id,name,slug,article_tags!inner(article_id)").limit(12),
    supabase.from("videos").select("id,title,slug,description,thumbnail_url,youtube_id,video_type,creator:creators(name,slug)").eq("status","published").lte("published_at",new Date().toISOString()).order("published_at",{ascending:false}).limit(3),
+   supabase.from("videos").select("id,title,slug,description,thumbnail_url,youtube_id,watch_category,creator_display_name,creator:creators(name,slug)").eq("is_watch_review",true).eq("status","published").lte("published_at",new Date().toISOString()).order("published_at",{ascending:false}).limit(3),
    supabase.from("creators").select("id,name,slug,bio,avatar_url").limit(4)
   ]);
   stories=latest.data??[];breaking=b.data??[];picks=p.data??[];storyOfDay=d.data??null;trending=t.data??[];weekend=w.data??[];topics=tagRows.data??[];videos=v.data??[];watchReviews=wr.data??[];creators=c.data??[];
