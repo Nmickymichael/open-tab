@@ -5,14 +5,15 @@ import type {Metadata} from "next";
 import {VideoBackButton} from "@/components/video-back-button";
 import {LocalSaveShare} from "@/components/local-save-share";
 import {cleanVideoDescription} from "@/lib/video-description";
+import {isEnglishVideo} from "@/lib/english-video";
 export const revalidate=300;
 type Props={params:Promise<{slug:string}>};
 export async function generateMetadata({params}:Props):Promise<Metadata>{const {slug}=await params;if(!supabase)return{title:"Video"};const {data}=await supabase.from("videos").select("title,description,thumbnail_url").eq("slug",slug).eq("status","published").lte("published_at",new Date().toISOString()).maybeSingle();return{title:data?.title||"Video",description:cleanVideoDescription(data?.description)||"Watch on OPEN TAB TV.",openGraph:{type:"video.other",images:data?.thumbnail_url?[data.thumbnail_url]:[]}}}
 export default async function VideoPage({params}:Props){
  const {slug}=await params;if(!supabase)return notFound();
- const {data:v}=await supabase.from("videos").select("*,creator:creators(name,slug,channel_url)").eq("slug",slug).eq("status","published").lte("published_at",new Date().toISOString()).maybeSingle();if(!v)return notFound();
- const relatedQuery=supabase.from("videos").select("id,title,slug,thumbnail_url,video_type,creator:creators(name)").eq("status","published").lte("published_at",new Date().toISOString()).neq("id",v.id).order("published_at",{ascending:false}).limit(4);
- const {data:related}=v.video_type?await relatedQuery.eq("video_type",v.video_type):await relatedQuery;
+ const {data:v}=await supabase.from("videos").select("*,creator:creators(name,slug,channel_url)").eq("slug",slug).eq("status","published").lte("published_at",new Date().toISOString()).maybeSingle();if(!v||!isEnglishVideo(v))return notFound();
+ const relatedQuery=supabase.from("videos").select("id,title,slug,thumbnail_url,video_type,creator:creators(name)").eq("status","published").lte("published_at",new Date().toISOString()).neq("id",v.id).order("published_at",{ascending:false}).limit(20);
+ const {data:relatedRows}=v.video_type?await relatedQuery.eq("video_type",v.video_type):await relatedQuery;\n const related=(relatedRows??[]).filter((item:any)=>isEnglishVideo(item)).slice(0,4);
  return <main className="wrap max-w-5xl py-8 md:py-12">
   <VideoBackButton/>
   <div className="eyebrow">{v.video_type==="podcast"?"OPEN TAB AUDIO":"OPEN TAB TV"}</div>
