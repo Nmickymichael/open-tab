@@ -1,6 +1,6 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 
-const REGIONS = ["US","CA","MX","BR","GB","DE","FR","ZA","NG","AE","IN","JP","KR","AU"];
+const REGIONS = ["US","CA","MX","BR","AR","GB","IE","DE","FR","ES","IT","NL","SE","ZA","NG","KE","EG","AE","SA","IN","PK","BD","JP","KR","ID","PH","SG","AU","NZ"];
 const CATEGORY: Record<string,string> = {
   "1":"Movies","2":"Lifestyle","10":"Music","15":"Lifestyle","17":"Viral Culture",
   "20":"Gaming","22":"Creators","23":"Viral Culture","24":"Movies",
