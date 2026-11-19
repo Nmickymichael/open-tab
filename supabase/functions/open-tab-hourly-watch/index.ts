@@ -138,21 +138,14 @@ Deno.serve(async (req: Request) => {
   // One rotating targeted YouTube search per hourly run; hydrate up to 50 IDs in one batch.
   // This expands topic coverage without per-video API calls or additional database tables.
   const DISCOVERY_QUERIES = [
-    {label:"automotive builds and restorations",query:"car builds modifications restoration rebuild project"},
-    {label:"house renovation and construction",query:"house renovation home building construction project"},
-    {label:"workshop and maker builds",query:"workshop build woodworking maker DIY project"},
-    {label:"DIY projects",query:"DIY home improvement project tutorial build"},
-    {label:"Bible and Christian podcasts",query:"Bible Christian podcast episode interview"},
-    {label:"faith and theology podcasts",query:"faith theology Christian podcast conversation"},
-    {label:"interviews and talk shows",query:"English interview talk show podcast episode"},
-    {label:"technology and culture podcasts",query:"technology culture podcast interview episode"},
-    {label:"technology reviews",query:"tech review smartphone laptop gadget comparison"},
-    {label:"English technology reviewers",query:"Mrwhosetheboss MKBHD tech review"},
-    {label:"MrBeast and English creator videos",query:"MrBeast challenge English creator video"},
-    {label:"music videos and performances",query:"official music video live performance"},
-    {label:"gaming videos",query:"gaming gameplay walkthrough"},
-    {label:"playable games",query:"interactive game playable browser game"},
-    {label:"movies and short films",query:"movie trailer short film film"}
+    {label:"Building: automotive, renovation, construction and maker projects",query:"car build|car modification|car restoration|house renovation|home construction|workshop build|maker build|DIY project|woodworking"},
+    {label:"Podcasts: Bible, Christian, faith, theology, interviews and talk shows",query:"Bible podcast|Christian podcast|faith podcast|theology podcast|interview podcast|talk show podcast|podcast clips|technology culture podcast"},
+    {label:"Tech: reviews and English tech creators",query:"tech review|smartphone review|laptop review|gadget review|MKBHD|Mrwhosetheboss|Unbox Therapy"},
+    {label:"Explore: MrBeast and regular English creators",query:"MrBeast|Dude Perfect|Sidemen|Mark Rober|Veritasium|Emma Chamberlain|Casey Neistat"},
+    {label:"Music: official videos and performances",query:"official music video|live music performance|music cover"},
+    {label:"Gaming: gameplay and gaming creators",query:"gaming gameplay|Minecraft gameplay|Fortnite gameplay|Roblox gameplay|gaming walkthrough"},
+    {label:"Playables: interactive and browser games",query:"interactive game|playable game|browser game|play in browser"},
+    {label:"Movies: trailers and short films",query:"movie trailer|short film|film trailer|animated short film"}
   ];
   const discoveryQuery=DISCOVERY_QUERIES[new Date().getUTCHours()%DISCOVERY_QUERIES.length];
   const byId = new Map<string, { video:any; regions:Set<string>; ranks:number[]; searchTopics:string[] }>();
