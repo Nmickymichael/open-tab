@@ -12,16 +12,19 @@ const slugify = (s: string) => s.toLowerCase().normalize("NFKD").replace(/[\u030
 
 Deno.serve(async (req: Request) => {
   if (req.method !== "POST") return json({ error:"POST required" },405);
-  const cronSecret = Deno.env.get("OPEN_TAB_CRON_SECRET");
   const supplied = req.headers.get("x-open-tab-cron-secret");
-  if (!cronSecret || !supplied || supplied !== cronSecret) return json({ error:"Unauthorized" },401);
-
   const youtubeKey = Deno.env.get("YOUTUBE_API_KEY");
   const supabaseUrl = Deno.env.get("SUPABASE_URL");
   const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
-  if (!youtubeKey || !supabaseUrl || !serviceKey) {
-    return json({ error:"Missing YOUTUBE_API_KEY or Supabase server credentials. Configure Edge Function secrets first." },503);
-  }
+  if (!supplied || !supabaseUrl || !serviceKey) return json({ error:"Unauthorized" },401);
+
+  const authCheck = await fetch(supabaseUrl + "/rest/v1/rpc/verify_open_tab_cron_secret", {
+    method:"POST",
+    headers:{ apikey:serviceKey, Authorization:"Bearer "+serviceKey, "Content-Type":"application/json" },
+    body:JSON.stringify({ p_secret:supplied })
+  });
+  if (!authCheck.ok || await authCheck.json() !== true) return json({ error:"Unauthorized" },401);
+  if (!youtubeKey) return json({ error:"YOUTUBE_API_KEY is not configured in Supabase Edge Function Secrets." },503);
 
   const byId = new Map<string, { video:any; regions:Set<string>; ranks:number[] }>();
   const regionErrors:string[] = [];
