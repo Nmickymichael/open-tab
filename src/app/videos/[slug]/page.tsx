@@ -13,7 +13,8 @@ export default async function VideoPage({params}:Props){
  const {slug}=await params;if(!supabase)return notFound();
  const {data:v}=await supabase.from("videos").select("*,creator:creators(name,slug,channel_url)").eq("slug",slug).eq("status","published").lte("published_at",new Date().toISOString()).maybeSingle();if(!v||!isEnglishVideo(v))return notFound();
  const relatedQuery=supabase.from("videos").select("id,title,slug,thumbnail_url,video_type,creator:creators(name)").eq("status","published").lte("published_at",new Date().toISOString()).neq("id",v.id).order("published_at",{ascending:false}).limit(20);
- const {data:relatedRows}=v.video_type?await relatedQuery.eq("video_type",v.video_type):await relatedQuery;\n const related=(relatedRows??[]).filter((item:any)=>isEnglishVideo(item)).slice(0,4);
+ const {data:relatedRows}=v.video_type?await relatedQuery.eq("video_type",v.video_type):await relatedQuery;
+ const related=(relatedRows??[]).filter((item:any)=>isEnglishVideo(item)).slice(0,4);
  return <main className="wrap max-w-5xl py-8 md:py-12">
   <VideoBackButton/>
   <div className="eyebrow">{v.video_type==="podcast"?"OPEN TAB AUDIO":"OPEN TAB TV"}</div>
