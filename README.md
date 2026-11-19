@@ -34,6 +34,7 @@ OPEN TAB is an international digital publication covering sports, celebrities, c
    - `supabase/migrations/20261119_03_reader_video_library.sql`
    - `supabase/migrations/20261119_04_contributor_profiles.sql`
    - `supabase/migrations/20261119_05_photography_and_source_attribution.sql`
+   - `supabase/migrations/20261119_05_photography_and_source_attribution.sql`
    - `supabase/migrations/20261120_01_advertising_sponsorships.sql`
 6. Run `supabase/tests/rls_smoke_test.sql` and complete identity-based tests for anon, author, editor and admin roles.
 7. Reader accounts are created at `/account` and receive the restricted `reader` role. Editorial staff accounts must be provisioned through a trusted administrator workflow and promoted to `author`, `editor` or `admin` only by a trusted owner; never expose staff role assignment to public clients. Promote the first administrator manually from the Supabase SQL editor.
@@ -65,7 +66,7 @@ Configure these server-side environment variables in the deployment platform (do
 - `OPENAI_BASE_URL` — optional API base URL; defaults to `https://api.openai.com/v1`.
 - `OPENAI_MODEL` — optional model name; defaults to `gpt-4o-mini`.
 
-The public homepage now gives greater prominence to the lead story, latest headlines, editorial picks, OPEN TAB TV, trending stories, creators, departments and newsletter signup. New editorial sections include Gaming, Music, Movies and Viral Culture. The article editor captures photo credit, image source, image licence/permission details, original reporting/social source URL and source platform; public story pages display the photo credit and original source link. Video and creator sections appear when their published records are available.
+The public homepage now gives greater prominence to the lead story, latest headlines, editorial picks, OPEN TAB TV, trending stories, creators, departments and newsletter signup. New editorial sections include Gaming, Music, Movies and Viral Culture. The article editor captures photo credit, image source, image licence/permission details, original reporting/social source URL and source platform; public story pages display the photo credit and original source link. New editorial sections include Gaming, Music, Movies and Viral Culture. The article editor captures photo credit, image source, image licence/permission details, original reporting/social source URL and source platform; public story pages display the photo credit and original source link. Video and creator sections appear when their published records are available.
 
 ## Global administration and revenue operations
 
@@ -126,7 +127,7 @@ Before opening the site to the public:
 - Configure backups, monitoring, error reporting, retention and incident response.
 - Run the GitHub Actions typecheck/build workflow and resolve any failures.
 - Test keyboard navigation, screen-reader labels, mobile layouts, image alt text, page performance and Core Web Vitals.
-- Use only media you own, have licensed, or are authorised to embed. Video entries use YouTube's privacy-enhanced embed host. Cover photography must carry a verified photographer/agency credit, original image-source URL and licence/permission details in the editorial desk. Never treat a publicly visible image as automatically reusable. AI-generated artwork must be labelled and must never be presented as documentary news photography. Social and viral coverage should link to original public posts and use platform-authorised embeds; do not reproduce full creator posts or videos without permission.
+- Use only media you own, have licensed, or are authorised to embed. Video entries use YouTube's privacy-enhanced embed host. Cover photography must carry a verified photographer/agency credit, original image-source URL and licence/permission details in the editorial desk. Never treat a publicly visible image as automatically reusable. AI-generated artwork must be labelled and must never be presented as documentary news photography. Social and viral coverage should link to original public posts and use platform-authorised embeds; do not reproduce full creator posts or videos without permission. Cover photography must carry a verified photographer/agency credit, original image-source URL and licence/permission details in the editorial desk. Never treat a publicly visible image as automatically reusable. AI-generated artwork must be labelled and must never be presented as documentary news photography. Social and viral coverage should link to original public posts and use platform-authorised embeds; do not reproduce full creator posts or videos without permission.
 
 ## What remains intentionally separate
 
