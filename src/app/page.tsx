@@ -28,7 +28,15 @@ export default async function Home(){
    supabase.from("videos").select("id,title,slug,description,thumbnail_url,youtube_id,watch_category,creator_display_name,creator:creators(name,slug)").eq("is_watch_review",true).eq("status","published").lte("published_at",new Date().toISOString()).order("published_at",{ascending:false}).limit(3),
    supabase.from("creators").select("id,name,slug,bio,avatar_url").limit(4)
   ]);
-  stories=latest.data??[];breaking=b.data??[];picks=p.data??[];storyOfDay=d.data??null;trending=t.data??[];weekend=w.data??[];topics=tagRows.data??[];videos=v.data??[];watchReviews=wr.data??[];creators=c.data??[];
+  stories=latest.data??[];breaking=b.data??[];picks=p.data??[];storyOfDay=d.data??null;trending=t.data??[];weekend=w.data??[];topics=tagRows.data??[];videos=v.data??[];watchReviews=(wr.data??[]).filter((review:any)=>{
+   const videoIds=new Set(videos.map((video:any)=>String(video.youtube_id||"").trim().toLowerCase()).filter(Boolean));
+   const videoSlugs=new Set(videos.map((video:any)=>String(video.slug||"").trim().toLowerCase()).filter(Boolean));
+   const videoTitles=new Set(videos.map((video:any)=>String(video.title||"").toLowerCase().replace(/[^a-z0-9]+/g," ").trim()).filter(Boolean));
+   const reviewId=String(review.youtube_id||"").trim().toLowerCase();
+   const reviewSlug=String(review.slug||"").trim().toLowerCase();
+   const reviewTitle=String(review.title||"").toLowerCase().replace(/[^a-z0-9]+/g," ").trim();
+   return !(reviewId&&videoIds.has(reviewId))&&!videoSlugs.has(reviewSlug)&&!videoTitles.has(reviewTitle);
+  }).slice(0,3);creators=c.data??[];
  }
  const lead=storyOfDay||stories[0];
  const sideStories=stories.filter(s=>s.id!==lead?.id).slice(0,3);
