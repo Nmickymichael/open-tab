@@ -11,7 +11,7 @@ export default async function ReaderPage({searchParams}:{searchParams:Promise<{u
  const p=await searchParams;const url=safeUrl(p.url||"");if(!url)return notFound();
  const title=text(p.title||"OPEN TAB Reader");const source=text(p.source||new URL(url).hostname);const date=text(p.date||"");
  const image=safeUrl(p.image||"");const imageCredit=text(p.imageCredit||"");const imageLicense=text(p.imageLicense||"");const imageSource=safeUrl(p.imageSource||"");
- const showImage=!!(image&&imageCredit&&imageLicense);
+ const showImage=!!(image&&imageCredit&&imageLicense);const licenseUrl=safeUrl(imageLicense);
  const back=p.back&&(p.back==="/news"||p.back.startsWith("/category/"))?p.back:"/";
  let next:NextItem[]=[];try{const parsed=JSON.parse(p.next||"[]");if(Array.isArray(parsed))next=parsed.slice(0,3).flatMap((item:any)=>{const u=safeUrl(String(item?.url||""));const t=text(String(item?.title||""));const s=text(String(item?.source||""));return u&&t?[{url:u,title:t,source:s}]:[]})}catch{}
  const overview="This report from "+source+" focuses on the development identified in the headline. OPEN TAB keeps this page to an independent, high-level introduction rather than recreating the publisher’s lead or article; consult the original report for verified details, evidence, updates and full context.";
@@ -20,7 +20,7 @@ export default async function ReaderPage({searchParams}:{searchParams:Promise<{u
   <div className="eyebrow mt-8">OPEN TAB READER · EXTERNAL REPORT</div>
   <h1 className="headline mt-4 text-4xl leading-tight md:text-6xl">{title}</h1>
   <div className="muted mt-3 text-xs">{source}{date?" · "+date:""}</div>
-  {showImage?<figure className="mt-8"><FeedImage src={image} alt={title}/><figcaption className="muted mt-2 text-xs">Photo: {imageCredit} · {imageLicense}{imageSource?<> · <a className="underline" href={imageSource} target="_blank" rel="noopener noreferrer">Image source</a></>:null}</figcaption></figure>:null}
+  {showImage?<figure className="mt-8"><FeedImage src={image} alt={title}/><figcaption className="muted mt-2 text-xs">Photo: {imageCredit} · {licenseUrl?<a className="underline" href={licenseUrl} target="_blank" rel="noopener noreferrer">Image licence</a>:imageLicense}{imageSource?<> · <a className="underline" href={imageSource} target="_blank" rel="noopener noreferrer">Image source</a></>:null}</figcaption></figure>:null}
   <section className="mt-8 border-l-2 border-[#f04438] pl-5"><div className="eyebrow">THE OPEN TAB OVERVIEW</div><p className="mt-3 text-base leading-7">{overview}</p></section>
   <LocalSaveShare id={url} title={title} kind="story"/>
   <aside className="mt-10 border-y border-neutral-300 py-6"><p className="eyebrow">PUBLISHER CREDIT</p><p className="mt-2 text-sm leading-6">Original reporting by <strong>{source}</strong>. OPEN TAB provides this independent overview; the original publisher retains the full report and its underlying work.</p><a className="btn-red mt-4 inline-flex" href={url} target="_blank" rel="noopener noreferrer">Read the original report ↗</a></aside>
