@@ -1,3 +1,4 @@
+import {GLOBAL_NEWS_SOURCES} from "@/lib/global-news-sources";
 export type LiveCategoryStory={title:string;url:string;description:string;source:string;date:string;image:string|null};
 const feeds:Record<string,{name:string;url:string}[]> = {
  sports:[{name:"BBC Sport",url:"https://feeds.bbci.co.uk/sport/rss.xml?edition=int"},{name:"ESPN",url:"https://www.espn.com/espn/rss/news"},{name:"Sky Sports",url:"https://www.skysports.com/rss/12040"}],
@@ -14,7 +15,7 @@ const feeds:Record<string,{name:string;url:string}[]> = {
  "viral-culture":[{name:"BuzzFeed",url:"https://www.buzzfeed.com/index.xml"},{name:"Social Media Today",url:"https://www.socialmediatoday.com/feeds/news/"},{name:"The Verge",url:"https://www.theverge.com/rss/index.xml"}],
  education:[{name:"BBC Science",url:"https://feeds.bbci.co.uk/news/science_and_environment/rss.xml"},{name:"The Guardian Education",url:"https://www.theguardian.com/education/rss"},{name:"Nature",url:"https://www.nature.com/subjects/education.rss"}],
  world:[{name:"BBC World",url:"https://feeds.bbci.co.uk/news/world/rss.xml"},{name:"Al Jazeera",url:"https://www.aljazeera.com/xml/rss/all.xml"},{name:"The Guardian World",url:"https://www.theguardian.com/world/rss"}],
- news:[{name:"BBC World",url:"https://feeds.bbci.co.uk/news/world/rss.xml"},{name:"NPR World",url:"https://feeds.npr.org/1004/rss.xml"},{name:"Al Jazeera",url:"https://www.aljazeera.com/xml/rss/all.xml"},{name:"DW World",url:"https://rss.dw.com/rdf/rss-en-world"},{name:"France 24",url:"https://www.france24.com/en/rss"},{name:"Africanews",url:"https://www.africanews.com/feed/rss"},{name:"BBC Africa",url:"https://feeds.bbci.co.uk/news/world/africa/rss.xml"},{name:"Daily Nation",url:"https://nation.africa/kenya/rss.xml"},{name:"Premium Times",url:"https://www.premiumtimesng.com/feed"},{name:"News24",url:"https://feeds.news24.com/articles/news24/TopStories/rss"}]
+ news:[...GLOBAL_NEWS_SOURCES.map(({name,url})=>({name,url}))]
 };
 const namedEntities:Record<string,string>={amp:"&",lt:"<",gt:">",quot:'"',apos:"'",nbsp:" ",ndash:"–",mdash:"—",rsquo:"’",lsquo:"‘",rdquo:"”",ldquo:"“",hellip:"…",copy:"©",reg:"®",trade:"™",euro:"€",pound:"£",cent:"¢",bull:"•",middot:"·",times:"×",divide:"÷"};
 function decodeEntities(value:string){return value.replace(/&(#x[0-9a-f]+|#\d+|[a-z][a-z0-9]+);/gi,(entity,key:string)=>{if(key[0]==="#"){const hex=key[1]?.toLowerCase()==="x";const n=parseInt(key.slice(hex?2:1),hex?16:10);try{return Number.isFinite(n)&&n>0&&n<=0x10ffff?String.fromCodePoint(n):" "}catch{return" "}}return namedEntities[key.toLowerCase()]??entity})}
