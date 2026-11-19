@@ -11,7 +11,7 @@ export const revalidate=60;
 type Story=any;
 export default async function Home(){
  let stories:Story[]=[];let breaking:Story[]=[];let picks:Story[]=[];let storyOfDay:Story|null=null;let trending:Story[]=[];let weekend:Story[]=[];let topics:any[]=[];let videos:Story[]=[];let watchReviews:Story[]=[];let creators:Story[]=[];let homepageAd:any=null;
- let categoryCards:{name:string;slug:string;description:string|null}[]=departments.map(name=>({name,slug:name.toLowerCase(),description:departmentDescriptions[name]}));
+ let categoryCards:{name:string;slug:string;description:string|null}[]=departments.map(name=>({name,slug:name.toLowerCase().replace(/\s+/g,"-"),description:departmentDescriptions[name]}));
  if(supabase){
   const {data:adData}=await supabase.from("active_ad_creatives").select("id,headline,description,creative_url,destination_url,placement").eq("placement","homepage_leaderboard").limit(1).maybeSingle();homepageAd=adData??null;
   const {data:categoryData}=await supabase.from("categories").select("name,slug,description").eq("is_active",true).order("sort_order");if(categoryData?.length)categoryCards=categoryData;
