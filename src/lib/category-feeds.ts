@@ -28,7 +28,7 @@ function imageSource(block:string){const m=block.match(/<(?:media:content|media:
 function publicArticleUrl(value:string){
  try{const url=new URL(value);if(!["http:","https:"].includes(url.protocol)||url.username||url.password)return null;const host=url.hostname.toLowerCase();if(host==="localhost"||host.endsWith(".localhost")||host==="127.0.0.1"||host==="::1"||host.startsWith("10.")||host.startsWith("192.168.")||/^172\.(1[6-9]|2[0-9]|3[01])\./.test(host))return null;return url.toString()}catch{return null}
 }
-function metadataAttribute(tagText:string,name:string){const match=tagText.match(new RegExp(name+"\\s*=\\s*(?:\\"([^\\"]*)\\"|'([^']*)'|([^\\s>]+))","i"));return match?.[1]??match?.[2]??match?.[3]??""}
+function metadataAttribute(tagText:string,name:string){const match=tagText.match(new RegExp("\\b"+name+"\\s*=\\s*(['"])(.*?)\\1","i"));return match?.[2]??""}
 function articleImageFromHtml(html:string,pageUrl:string){
  const tags=html.match(/<(?:meta|link)\b[^>]*>/gi)||[];const candidates:string[]=[];
  for(const raw of tags){if(/^<meta/i.test(raw)){const key=(metadataAttribute(raw,"property")||metadataAttribute(raw,"name")||metadataAttribute(raw,"itemprop")).toLowerCase();if(["og:image","og:image:secure_url","twitter:image","twitter:image:src","image"].includes(key)){const content=metadataAttribute(raw,"content");if(content)candidates.push(content)}}else if(/image_src/i.test(metadataAttribute(raw,"rel"))){const href=metadataAttribute(raw,"href");if(href)candidates.push(href)}}
