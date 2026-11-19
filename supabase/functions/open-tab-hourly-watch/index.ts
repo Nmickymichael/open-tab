@@ -43,8 +43,14 @@ function creatorPriority(video:any):number {
 function discoveryScore(item:{video:any;regions:Set<string>;ranks:number[]}):number {
   const views=Number(item.video.statistics?.viewCount??0);
   const averageRank=item.ranks.reduce((sum,n)=>sum+n,0)/Math.max(1,item.ranks.length);
+  const language=String(item.video.snippet?.defaultAudioLanguage??item.video.snippet?.defaultLanguage??"").toLowerCase();
+  const text=[item.video.snippet?.title,item.video.snippet?.description].join(" ");
+  const letters=(text.match(/[A-Za-z]/g)??[]).length;
+  const latinLetters=(text.match(/[A-Za-zÀ-ÖØ-öø-ÿ]/g)??[]).length;
+  // Soft English preference only: never reject a video for language or script.
+  const englishBoost=language.startsWith("en")?10:(letters>0&&latinLetters/letters>0.8?5:0);
   return item.regions.size*100 + Math.log10(Math.max(views,1))*8 +
-    (51-averageRank)*0.25 + creatorPriority(item.video)*12;
+    (51-averageRank)*0.25 + creatorPriority(item.video)*24 + englishBoost;
 }
 const json = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), { status, headers: { "Content-Type":"application/json", "Cache-Control":"no-store" } });
