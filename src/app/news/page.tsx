@@ -1,6 +1,7 @@
 import type {Metadata} from "next";
 import Link from "next/link";
 import {FeedImage} from "@/components/feed-image";
+import {FeedFreshness} from "@/components/feed-freshness";
 import {GLOBAL_NEWS_SOURCES} from "@/lib/global-news-sources";
 export const revalidate = 600;
 export const metadata:Metadata = {
@@ -43,7 +44,7 @@ export default async function NewsPage(){
     <div className="eyebrow">OPEN TAB · WORLD DESK · LIVE RSS ROUNDUP</div>
     <div className="mt-4 flex flex-wrap items-end justify-between gap-4"><div><h1 className="headline text-6xl md:text-8xl">WORLD NEWS<span className="accent">.</span></h1><p className="muted mt-4 max-w-2xl text-sm leading-7">The latest headlines from trusted newsrooms across Africa and the world. Follow reporting from East, West, Central, North and Southern Africa alongside major international stories.</p></div><span className="border border-neutral-400 px-3 py-2 text-[10px] font-black uppercase tracking-widest">{items.length} headlines · auto-refreshes</span></div>
     <div className="mt-8 flex flex-wrap gap-2">{SOURCES.map(s=><span key={s.name} className="pill">{s.name}</span>)}</div>
-    <div className="section-rule mt-10 mb-6 flex items-center justify-between"><h2 className="text-2xl font-black">LATEST INTERNATIONAL HEADLINES</h2><span className="muted text-[10px] uppercase tracking-widest">Updated every 10 minutes</span></div>
+    <div className="section-rule mt-10 mb-6 flex flex-wrap items-center justify-between gap-3"><h2 className="text-2xl font-black">LATEST INTERNATIONAL HEADLINES</h2><div className="flex flex-col items-start gap-1"><FeedFreshness label="World news"/><span className="muted text-[9px] uppercase tracking-widest">Feed cache: 10 minutes</span></div></div>
     {items.length?<div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">{items.map((item,i)=><article key={item.url} className="overflow-hidden border border-neutral-300">
       {item.image&&item.imageCredit&&item.imageLicense?<Link href={readerUrl(item,items)} className="block"><FeedImage src={item.image} alt={item.title}/><p className="muted px-5 pt-2 text-[10px]">Photo: {item.imageCredit} · {item.imageLicense}</p></Link>:<Link href={readerUrl(item,items)} className="flex aspect-video items-center justify-center bg-[#171717] text-5xl font-black text-white">OT<span className="accent">.</span></Link>}
       <div className="p-5"><div className="flex flex-wrap items-center justify-between gap-2"><span className="eyebrow">{item.source}</span><span className="muted text-[9px]">{timeLabel(item.date)}</span></div><Link href={readerUrl(item,items)}><h2 className="mt-3 text-xl font-black leading-tight hover:text-[#f04438]">{item.title}</h2></Link><p className="muted mt-4 text-[9px] font-bold uppercase tracking-widest">{item.region}</p><div className="mt-5 flex flex-wrap gap-4 text-[10px] font-black uppercase tracking-widest"><Link href={readerUrl(item,items)} className="text-[#f04438]">Read in OPEN TAB ↗</Link></div></div>
