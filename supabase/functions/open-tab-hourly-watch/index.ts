@@ -26,8 +26,52 @@ Deno.serve(async (req: Request) => {
   if (!authCheck.ok || await authCheck.json() !== true) return json({ error:"Unauthorized" },401);
   if (!youtubeKey) return json({ error:"YOUTUBE_API_KEY is not configured in Supabase Edge Function Secrets." },503);
 
+  // Refresh up to 50 existing TV items in one YouTube statistics request,
+  // then persist all returned counts through one restricted database RPC.
+  // This runs on the existing hourly schedule, never on page requests.
+  const viewRefreshErrors:string[] = [];
+  try {
+    const libraryUrl = new URL(supabaseUrl + "/rest/v1/videos");
+    libraryUrl.search = new URLSearchParams({select:"id,youtube_id",status:"eq.published",youtube_id:"not.is.null",order:"published_at.desc",limit:"50"}).toString();
+    const authHeaders = {apikey:serviceKey,Authorization:"Bearer "+serviceKey};
+    const libraryResponse = await fetch(libraryUrl,{headers:authHeaders});
+    if (!libraryResponse.ok) viewRefreshErrors.push("library-"+libraryResponse.status);
+    else {
+      const library:any[] = await libraryResponse.json();
+      const ids = [...new Set(library.map(row=>String(row.youtube_id||"")).filter(Boolean))].slice(0,50);
+      if (ids.length) {
+        const statsUrl = new URL("https://www.googleapis.com/youtube/v3/videos");
+        statsUrl.search = new URLSearchParams({part:"statistics",id:ids.join(","),key:youtubeKey}).toString();
+        const statsResponse = await fetch(statsUrl);
+        if (!statsResponse.ok) viewRefreshErrors.push("youtube-"+statsResponse.status);
+        else {
+          const stats = await statsResponse.json();
+          const byYoutubeId = new Map<string,number>();
+          (stats.items??[]).forEach((item:any)=>{
+            const count=Number(item.statistics?.viewCount);
+            if(item.id&&Number.isSafeInteger(count)&&count>=0)byYoutubeId.set(String(item.id),count);
+          });
+          const counts=library.flatMap(row=>{
+            const count=byYoutubeId.get(String(row.youtube_id||""));
+            return count===undefined?[]:[{id:row.id,view_count:count}];
+          });
+          if(counts.length) {
+            const update=await fetch(supabaseUrl+"/rest/v1/rpc/refresh_video_view_counts",{
+              method:"POST",
+              headers:{...authHeaders,"Content-Type":"application/json"},
+              body:JSON.stringify({p_counts:counts})
+            });
+            if(!update.ok)viewRefreshErrors.push("database-"+update.status);
+          }
+        }
+      }
+    }
+  } catch {
+    viewRefreshErrors.push("network");
+  }
+
   const byId = new Map<string, { video:any; regions:Set<string>; ranks:number[] }>();
-  const regionErrors:string[] = [];
+  const regionErrors:string[] = viewRefreshErrors.map(error=>"view-count-refresh:"+error);
   for (const region of REGIONS) {
     const url = new URL("https://www.googleapis.com/youtube/v3/videos");
     url.search = new URLSearchParams({
