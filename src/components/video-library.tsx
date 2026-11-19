@@ -2,6 +2,7 @@
 
 import {useMemo,useState} from "react";
 import Link from "next/link";
+import {isEnglishVideo} from "@/lib/english-video";
 
 type VideoItem={
  id:string;title:string;slug:string;description?:string|null;thumbnail_url?:string|null;
@@ -82,6 +83,7 @@ export function VideoLibrary({videos}:{videos:VideoItem[]}){
  const filtered=useMemo(()=>{
   const term=query.trim().toLocaleLowerCase();
   return videos.filter(video=>{
+   if(!isEnglishVideo(video))return false;
    const matchesLane=lane==="Explore"||laneFor(video)===lane;
    const matchesQuery=!term||[video.title,video.description,video.creator?.name,video.creator?.slug,video.creator_display_name,genreFor(video),laneFor(video)].some(value=>String(value??"").toLocaleLowerCase().includes(term));
    return matchesLane&&matchesQuery;
