@@ -51,8 +51,8 @@ function laneFor(video:VideoItem):string{
  const text=[video.title,video.description,video.watch_category,video.creator?.name,video.creator_display_name].join(" ").toLowerCase();
  const category=genreFor(video);
  // Prefer specific content formats/topics over stale or broad stored genres.
- if(video.video_type==="podcast"||category==="Podcasts"||/\b(podcast|podcasts|full episode|podcast episode|talk show|interview|long-form conversation|bible study podcast|christian podcast|faith podcast|theology podcast)\b/.test(text))return "Podcasts";
- if(/\b(car build|car builds|car modification|modified car|car restoration|automotive restoration|engine rebuild|house renovation|home renovation|home building|building a house|construction project|workshop build|workshop tour|woodworking|maker build|diy project|renovation project|3d printing)\b/.test(text))return "Building";
+ if(video.video_type==="podcast"||category==="Podcasts"||/\b(podcast|podcasts|full episode|podcast episode|talk show|interview|long-form conversation|bible study podcast|christian podcast|faith podcast|theology podcast)\b/.test(text)||(/\b(bible|christian|faith|theology|jesus|scripture|gospel|apologetics)\b/.test(text)&&/\b(show|series|discussion|interview|conversation|episode|sermon|study)\b/.test(text)))return "Podcasts";
+ if(/\b(car build|car builds|automotive build|automotive builds|car modification|car modifications|modified car|car restoration|car restorations|automotive restoration|engine rebuild|house renovation|house renovations|home renovation|home renovations|home building|building a house|construction project|workshop build|workshop builds|workshop tour|woodworking|maker build|maker builds|diy project|diy projects|renovation project|3d printing)\b/.test(text))return "Building";
  if(/\b(mrwhosetheboss|mkbhd|marques brownlee|unbox therapy|linus tech tips|dave2d|tech review|smartphone|phone review|laptop review|gadget review|android|iphone|consumer technology)\b/.test(text))return "Tech";
  if(/\b(playable|playables|interactive game|browser game|play in browser|game demo)\b/.test(text))return "Playables";
  if(category==="Music")return "Music";
