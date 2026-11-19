@@ -10,6 +10,7 @@ import { readingTime } from "@/components/reading-time";
 import { MovieRating } from "@/components/movie-rating";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import { VideoBackButton } from "@/components/video-back-button";
 
 export const revalidate = 60;
 
@@ -87,6 +88,14 @@ export default async function StoryPage({ params }: StoryParams) {
 
   const base = process.env.NEXT_PUBLIC_SITE_URL || "https://opentab-media.netlify.app";
   const minutes = readingTime(story.content || "");
+  const sourceUrl = typeof story.source_url === "string" ? story.source_url : "";
+  let embeddedVideoId: string | null = null;
+  try {
+    const videoUrl = new URL(sourceUrl);
+    if (videoUrl.hostname === "youtu.be" || videoUrl.hostname.endsWith(".youtu.be")) embeddedVideoId = videoUrl.pathname.split("/").filter(Boolean)[0] || null;
+    else if (videoUrl.hostname === "youtube.com" || videoUrl.hostname.endsWith(".youtube.com")) embeddedVideoId = videoUrl.searchParams.get("v") || (videoUrl.pathname.startsWith("/embed/") ? videoUrl.pathname.split("/")[2] : null);
+  } catch { /* Non-video source URLs remain ordinary publisher links. */ }
+
   const structuredData = {
     "@context": "https://schema.org",
     "@type": "NewsArticle",
@@ -113,6 +122,17 @@ export default async function StoryPage({ params }: StoryParams) {
       </div>
       <ReaderActions articleId={story.id} title={story.title} />
       <ReaderControls />
+      {embeddedVideoId && (
+        <section className="mt-8" aria-label="Embedded story video">
+          <VideoBackButton />
+          <div className="mt-4 aspect-video bg-black">
+            <iframe className="h-full w-full" src={`https://www.youtube-nocookie.com/embed/${encodeURIComponent(embeddedVideoId)}`} title={story.title} allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerPolicy="strict-origin-when-cross-origin" allowFullScreen />
+          </div>
+          <p className="muted mt-3 border-b border-neutral-300 pb-4 text-xs">
+            Video credit: <strong>{story.source_platform || "Original video publisher"}</strong> · Embedded from YouTube. {sourceUrl ? <a className="accent underline" href={sourceUrl} target="_blank" rel="noopener noreferrer">Watch original video ↗</a> : null}
+          </p>
+        </section>
+      )}
       {story.cover_image && (
         <figure className="mt-9">
           <img src={story.cover_image} alt={story.cover_image_alt || story.title} className="w-full max-h-[560px] object-cover" />
