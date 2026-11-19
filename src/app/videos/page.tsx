@@ -8,7 +8,7 @@ export const revalidate=60;
 export default async function Videos(){
  let items:any[]=[];let podcasts:any[]=[];
  if(supabase){
-  const result=await supabase.from("videos").select("*,creator:creators(name,slug)").eq("status","published").lte("published_at",new Date().toISOString()).order("published_at",{ascending:false}).limit(40);
+  const result=await supabase.from("videos").select("*,creator:creators(name,slug)").eq("status","published").lte("published_at",new Date().toISOString()).order("published_at",{ascending:false}).limit(240);
   if(result.error){
    const fallback=await supabase.from("videos").select("*,creator:creators(name,slug)").eq("status","published").lte("published_at",new Date().toISOString()).order("published_at",{ascending:false}).limit(30);
    items=(fallback.data??[]).filter((v:any)=>v.video_type!=="podcast"&&isEnglishVideo(v));
@@ -25,12 +25,12 @@ export default async function Videos(){
   <div className="mt-3"><FeedFreshness label="OPEN TAB TV"/></div>
   <SectionJump items={[{label:"All",href:"#all-content",active:true},{label:"Videos",href:"#videos"},{label:"Podcasts",href:"#podcasts"},{label:"Browse all news",href:"/news"}]}/>
   <div className="flex flex-wrap gap-3 mt-5"><Link href="/watch" className="pill">OPEN TAB WATCH ↗</Link><Link href="/podcasts" className="pill">Podcast hub ↗</Link></div>
-  {items.length?<section id="videos" className="mt-10 scroll-mt-6">
+  {(items.length||podcasts.length)?<section id="videos" className="mt-10 scroll-mt-6">
    <div className="section-rule mb-6 flex flex-wrap items-end justify-between gap-3">
     <div><p className="eyebrow">Watch now</p><h2 className="text-2xl font-black">LATEST VIDEOS</h2></div>
     <span className="muted text-[10px]">{items.length} videos loaded</span>
    </div>
-   <VideoLibrary videos={items}/>
+   <VideoLibrary videos={[...items,...podcasts]}/>
   </section>:<p className="muted mt-12">Video programming is being prepared. Published videos will appear here.</p>}
   {podcasts.length>0&&<section id="podcasts" className="mt-16 scroll-mt-6">
    <div className="section-rule mb-6"><p className="eyebrow">Listen anywhere</p><h2 className="font-black text-2xl">LATEST PODCAST EPISODES</h2></div>
