@@ -6,7 +6,7 @@ import {FeedImage} from "@/components/feed-image";
 import {departments,departmentDescriptions} from "@/lib/categories";
 import {getLiveCategoryStories} from "@/lib/category-feeds";
 import type {Metadata} from "next";
-export const revalidate=300;
+export const revalidate=600;
 async function getCategory(slug:string){if(!supabase)return null;const {data}=await supabase.from("categories").select("id,name,description,slug,is_active").eq("slug",slug).eq("is_active",true).maybeSingle();return data}
 export async function generateMetadata({params}:{params:Promise<{slug:string}>}):Promise<Metadata>{const {slug}=await params;const category=await getCategory(slug);const fallback=departments.find(x=>x.toLowerCase()===slug);const name=category?.name||fallback||slug;return {title:name,description:category?.description||departmentDescriptions[name as keyof typeof departmentDescriptions]||`Latest stories in ${name}`}}
 function readerUrl(item:{url:string;title:string;description:string;source:string;image:string|null},back:string){const q=new URLSearchParams({url:item.url,title:item.title,summary:item.description.slice(0,1200),source:item.source,back});if(item.image)q.set("image",item.image);return "/reader?"+q.toString()}
