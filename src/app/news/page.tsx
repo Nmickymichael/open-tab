@@ -12,7 +12,24 @@ const SOURCES:FeedSource[]=[
   {name:"Al Jazeera",url:"https://www.aljazeera.com/xml/rss/all.xml",region:"Qatar · Global"},
   {name:"DW",url:"https://rss.dw.com/rdf/rss-en-world",region:"Germany · World"},
   {name:"France 24",url:"https://www.france24.com/en/rss",region:"France · Global"},
-  {name:"The Guardian",url:"https://www.theguardian.com/world/rss",region:"United Kingdom · World"}
+  {name:"The Guardian",url:"https://www.theguardian.com/world/rss",region:"United Kingdom · World"},
+  {name:"Africanews",url:"https://www.africanews.com/feed/rss",region:"Pan-African · Africa"},
+  {name:"BBC Africa",url:"https://feeds.bbci.co.uk/news/world/africa/rss.xml",region:"United Kingdom · Africa"},
+  {name:"France 24 Africa",url:"https://www.france24.com/en/africa/rss",region:"France · Africa"},
+  {name:"The Africa Report",url:"https://www.theafricareport.com/feed/",region:"Pan-African · Africa"},
+  {name:"AllAfrica",url:"https://allafrica.com/tools/headlines/rdf/latest/headlines.rdf",region:"Pan-African · Africa"},
+  {name:"Daily Nation",url:"https://nation.africa/kenya/rss.xml",region:"Kenya · East Africa"},
+  {name:"The EastAfrican",url:"https://www.theeastafrican.co.ke/tea/rss",region:"East Africa"},
+  {name:"Premium Times",url:"https://www.premiumtimesng.com/feed",region:"Nigeria · West Africa"},
+  {name:"Vanguard Nigeria",url:"https://www.vanguardngr.com/feed/",region:"Nigeria · West Africa"},
+  {name:"Channels Television",url:"https://www.channelstv.com/feed/",region:"Nigeria · West Africa"},
+  {name:"MyJoyOnline",url:"https://www.myjoyonline.com/feed/",region:"Ghana · West Africa"},
+  {name:"News24",url:"https://feeds.news24.com/articles/news24/TopStories/rss",region:"South Africa · Southern Africa"},
+  {name:"Daily Maverick",url:"https://www.dailymaverick.co.za/feed/",region:"South Africa · Southern Africa"},
+  {name:"The New Times",url:"https://www.newtimes.co.rw/rss",region:"Rwanda · East Africa"},
+  {name:"The Reporter Ethiopia",url:"https://www.thereporterethiopia.com/feed/",region:"Ethiopia · Horn of Africa"},
+  {name:"Radio Okapi",url:"https://www.radiookapi.net/rss.xml",region:"DR Congo · Central Africa"},
+  {name:"Sudan Tribune",url:"https://sudantribune.com/spip.php?page=backend",region:"Sudan · Northeast Africa"}
 ];
 function decode(value:string){return value.replace(/<!\[CDATA\[([\s\S]*?)\]\]>/g,"$1").replace(/&amp;/g,"&").replace(/&quot;/g,'"').replace(/&#39;|&apos;/g,"'").replace(/&lt;/g,"<").replace(/&gt;/g,">").trim();}
 function clean(value:string){return decode(value.replace(/<[^>]*>/g," ").replace(/\s+/g," "));}
@@ -40,7 +57,7 @@ export default async function NewsPage(){
   const items=results.flat().filter(item=>{const key=item.url.split("?")[0];if(seen.has(key))return false;seen.add(key);return true;}).sort((a,b)=>new Date(b.date).getTime()-new Date(a.date).getTime()).slice(0,60);
   return <main className="wrap min-h-[60vh] py-10 md:py-14">
     <div className="eyebrow">OPEN TAB · WORLD DESK · LIVE RSS ROUNDUP</div>
-    <div className="mt-4 flex flex-wrap items-end justify-between gap-4"><div><h1 className="headline text-6xl md:text-8xl">WORLD NEWS<span className="accent">.</span></h1><p className="muted mt-4 max-w-2xl text-sm leading-7">The latest headlines from newsrooms around the world. Explore the original reporting, compare perspectives and follow the stories shaping the day.</p></div><span className="border border-neutral-400 px-3 py-2 text-[10px] font-black uppercase tracking-widest">{items.length} headlines · auto-refreshes</span></div>
+    <div className="mt-4 flex flex-wrap items-end justify-between gap-4"><div><h1 className="headline text-6xl md:text-8xl">WORLD NEWS<span className="accent">.</span></h1><p className="muted mt-4 max-w-2xl text-sm leading-7">The latest headlines from trusted newsrooms across Africa and the world. Follow reporting from East, West, Central, North and Southern Africa alongside major international stories.</p></div><span className="border border-neutral-400 px-3 py-2 text-[10px] font-black uppercase tracking-widest">{items.length} headlines · auto-refreshes</span></div>
     <div className="mt-8 flex flex-wrap gap-2">{SOURCES.map(s=><span key={s.name} className="pill">{s.name}</span>)}</div>
     <div className="section-rule mt-10 mb-6 flex items-center justify-between"><h2 className="text-2xl font-black">LATEST INTERNATIONAL HEADLINES</h2><span className="muted text-[10px] uppercase tracking-widest">Updated every 5 minutes</span></div>
     {items.length?<div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">{items.map((item,i)=><article key={item.url} className="overflow-hidden border border-neutral-300">
