@@ -7,6 +7,7 @@ export const metadata:Metadata = {
   title:"Latest World News",
   description:"The latest international headlines from trusted newsrooms around the world, with links to original reporting."
 };
+type FeedSource={name:string;url:string;region:string};
 type NewsItem={title:string;url:string;description:string;date:string;source:string;region:string;image:string|null};
 const SOURCES=GLOBAL_NEWS_SOURCES;
 const entities:Record<string,string>={amp:"&",quot:'"',apos:"'",lt:"<",gt:">",nbsp:" ",ndash:"–",mdash:"—",rsquo:"’",lsquo:"‘",rdquo:"”",ldquo:"“",hellip:"…",copy:"©",reg:"®",trade:"™"};
