@@ -113,14 +113,15 @@ The app includes dynamic sitemap generation, a robots policy, canonical story UR
 
 ## Security notes / launch checklist
 
-This repository is a substantially expanded implementation, but it has **not yet been connected to a live Supabase project, deployed, or independently security-certified**. The GitHub Actions typecheck/build workflow is included, but a successful CI run has not yet been confirmed.
+The repository is now connected to the live Supabase project and the photography/source-attribution migration has been applied. Existing published stories have been updated with verified image credits, image-source links, licence details and reporting-source links. GitHub Actions run #178 passed the dependency audit, TypeScript check and production build. The Netlify production deployment is still not verified from this repository, and the project has not been independently security-certified.
 
 Before opening the site to the public:
 
-- Run all SQL scripts in order and inspect the resulting policies.
+- Continue validating RLS paths with separate reader, author, editor and admin test accounts; the current schema migrations are applied to the connected Supabase project.
 - Create separate anonymous, author, editor and admin test accounts; verify every RLS path.
 - Confirm the first admin role is assigned only through the trusted database owner workflow.
 - Deploy Edge Functions and set secrets in the Supabase dashboard.
+- In Netlify, configure `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY` and `NEXT_PUBLIC_SITE_URL` for the production site. Use the publishable/anon key only in the browser; never expose the service-role key.
 - Configure a verified newsletter sender domain and test confirmation/unsubscribe handling.
 - Add CAPTCHA/Turnstile at the edge if comment/signup abuse warrants it; current Edge Functions include per-IP rate limits and server-side validation.
 - Review privacy, terms, contact and editorial-policy pages with accurate publisher/contact details and legal advice appropriate to your operating jurisdiction.
