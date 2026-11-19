@@ -22,3 +22,10 @@ html[data-theme="dark"] .account-input{color:#fff}
 html[data-theme="dark"] .poll-card{background:#1d1d1d}
 html[data-theme="dark"] .correction-note{background:#242424}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}}
+
+/* Seamless, touch-scrollable category navigation: three copies keep the rail looping in either direction. */
+.nav-infinite{display:flex;flex-wrap:nowrap;overflow-x:auto;overflow-y:hidden;scrollbar-width:none;overscroll-behavior-x:contain;touch-action:pan-x;scroll-behavior:auto;gap:0;scroll-snap-type:x proximity}
+.nav-infinite::-webkit-scrollbar{display:none}
+.nav-loop-group{display:flex;flex:0 0 auto;align-items:center;gap:22px;padding-right:22px;white-space:nowrap}
+.nav-loop-group a{flex:0 0 auto;white-space:nowrap}
+@media(max-width:640px){.nav-loop-group{gap:17px;padding-right:17px}.nav-infinite{padding-top:15px;padding-bottom:15px}}
