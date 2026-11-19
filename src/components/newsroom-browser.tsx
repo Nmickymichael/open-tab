@@ -13,7 +13,7 @@ function timeLabel(value:string){
 }
 function readerUrl(item:NewsItem,nextItems:NewsItem[]=[]){
   const q=new URLSearchParams({url:item.url,title:item.title,source:item.source,date:timeLabel(item.date),back:"/news"});
-  const next=nextItems.filter(x=>x.url!==item.url).slice(0,3).map(x=>({url:x.url,title:x.title,source:x.source}));
+  const next=nextItems.filter(x=>x.url!==item.url).slice(0,3).map(x=>({url:x.url,title:x.title,source:x.source,image:x.image}));
   if(next.length)q.set("next",JSON.stringify(next));
   if(item.image){q.set("image",item.image);if(item.imageCredit)q.set("imageCredit",item.imageCredit);if(item.imageLicense)q.set("imageLicense",item.imageLicense);if(item.imageSource)q.set("imageSource",item.imageSource);}
   return "/reader?"+q.toString();
