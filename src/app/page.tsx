@@ -19,7 +19,7 @@ export default async function Home(){
   const [latest,b,p,d,t,w,tagRows,v,wr,c]=await Promise.all([
    base().order("published_at",{ascending:false}).limit(15),
    supabase.from("articles").select("title,slug").eq("status","published").eq("is_breaking",true).lte("published_at",new Date().toISOString()).order("published_at",{ascending:false}).limit(5),
-   supabase.from("articles").select("id,title,slug,excerpt,cover_image,cover_image_alt,published_at,category:categories(name,slug)").eq("status","published").eq("is_editors_pick",true).lte("published_at",new Date().toISOString()).order("published_at",{ascending:false}).limit(3),
+   supabase.from("articles").select("id,title,slug,excerpt,cover_image,cover_image_alt,cover_image_credit,cover_image_source,cover_image_license,published_at,category:categories(name,slug)").eq("status","published").eq("is_editors_pick",true).lte("published_at",new Date().toISOString()).order("published_at",{ascending:false}).limit(3),
    supabase.from("articles").select("id,title,slug,excerpt,cover_image,cover_image_alt,published_at,category:categories(name,slug)").eq("status","published").eq("is_story_of_day",true).lte("published_at",new Date().toISOString()).order("published_at",{ascending:false}).limit(1).maybeSingle(),
    supabase.from("public_trending_articles").select("id,title,slug,excerpt,cover_image,cover_image_alt,published_at,category_name,category_slug,view_count").limit(3),
    supabase.from("articles").select("id,title,slug,excerpt,cover_image,cover_image_alt,published_at,category:categories(name,slug)").eq("status","published").eq("is_weekend_read",true).lte("published_at",new Date().toISOString()).order("published_at",{ascending:false}).limit(3),
