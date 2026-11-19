@@ -11,6 +11,7 @@ import { MovieRating } from "@/components/movie-rating";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { VideoBackButton } from "@/components/video-back-button";
+import { FeedImage } from "@/components/feed-image";
 
 export const revalidate = 60;
 
@@ -133,12 +134,10 @@ export default async function StoryPage({ params }: StoryParams) {
           </p>
         </section>
       )}
-      {story.cover_image && (
-        <figure className="mt-9">
-          <img src={story.cover_image} alt={story.cover_image_alt || story.title} className="w-full max-h-[560px] object-cover" />
-          {(story.cover_image_alt || story.cover_image_context || story.cover_image_credit) && <figcaption className="muted mt-2 text-xs">{story.cover_image_alt}{story.cover_image_context ? <span>{story.cover_image_alt ? " · " : ""}{story.cover_image_context}</span> : null}{story.cover_image_credit ? <span>{story.cover_image_alt || story.cover_image_context ? " · " : ""}Photo: {story.cover_image_credit}</span> : null}{story.cover_image_source ? <span> · <a className="underline" href={story.cover_image_source} target="_blank" rel="noopener noreferrer">Image source</a></span> : null}{story.cover_image_license ? <span> · {story.cover_image_license_url ? <a className="underline" href={story.cover_image_license_url} target="_blank" rel="noopener noreferrer">{story.cover_image_license}</a> : story.cover_image_license}</span> : null}</figcaption>}
-        </figure>
-      )}
+      <figure className="mt-9">
+        <FeedImage src={typeof story.cover_image === "string" ? story.cover_image : null} alt={story.cover_image_alt || story.title} />
+        {(story.cover_image_alt || story.cover_image_context || story.cover_image_credit || !story.cover_image) && <figcaption className="muted mt-2 text-xs">{story.cover_image_alt || (!story.cover_image ? "OPEN TAB illustrative artwork" : "")}{story.cover_image_context ? <span>{story.cover_image_alt ? " · " : ""}{story.cover_image_context}</span> : null}{story.cover_image_credit ? <span>{story.cover_image_alt || story.cover_image_context ? " · " : ""}Photo: {story.cover_image_credit}</span> : null}{story.cover_image_source ? <span> · <a className="underline" href={story.cover_image_source} target="_blank" rel="noopener noreferrer">Image source</a></span> : null}{story.cover_image_license ? <span> · {story.cover_image_license_url ? <a className="underline" href={story.cover_image_license_url} target="_blank" rel="noopener noreferrer">{story.cover_image_license}</a> : story.cover_image_license}</span> : null}</figcaption>}
+      </figure>
       {(story.source_url || story.source_platform) && <aside className="mt-8 border-y border-neutral-300 py-4"><div className="eyebrow">ORIGINAL SOURCE</div><p className="mt-2 text-sm">{story.source_platform || "Source"}{story.source_url ? <> · <a className="accent underline" href={story.source_url} target="_blank" rel="noopener noreferrer">View original reporting / post ↗</a></> : null}</p></aside>}
       <div className="article-content mt-10 max-w-none">
         <ReactMarkdown remarkPlugins={[remarkGfm]}>{story.content || ""}</ReactMarkdown>
