@@ -3,6 +3,7 @@ import Link from "next/link";
 import {FeedFreshness} from "@/components/feed-freshness";
 import {SectionJump} from "@/components/section-jump";
 import {VideoLibrary} from "@/components/video-library";
+import {isEnglishVideo} from "@/lib/english-video";
 export const revalidate=60;
 export default async function Videos(){
  let items:any[]=[];let podcasts:any[]=[];
@@ -10,11 +11,11 @@ export default async function Videos(){
   const result=await supabase.from("videos").select("*,creator:creators(name,slug)").eq("status","published").lte("published_at",new Date().toISOString()).order("published_at",{ascending:false}).limit(40);
   if(result.error){
    const fallback=await supabase.from("videos").select("*,creator:creators(name,slug)").eq("status","published").lte("published_at",new Date().toISOString()).order("published_at",{ascending:false}).limit(30);
-   items=(fallback.data??[]).filter((v:any)=>v.video_type!=="podcast");
-   podcasts=(fallback.data??[]).filter((v:any)=>v.video_type==="podcast");
+   items=(fallback.data??[]).filter((v:any)=>v.video_type!=="podcast"&&isEnglishVideo(v));
+   podcasts=(fallback.data??[]).filter((v:any)=>v.video_type==="podcast"&&isEnglishVideo(v));
   }else{
-   items=(result.data??[]).filter((v:any)=>v.video_type!=="podcast");
-   podcasts=(result.data??[]).filter((v:any)=>v.video_type==="podcast");
+   items=(result.data??[]).filter((v:any)=>v.video_type!=="podcast"&&isEnglishVideo(v));
+   podcasts=(result.data??[]).filter((v:any)=>v.video_type==="podcast"&&isEnglishVideo(v));
   }
  }
  return <main id="all-content" className="wrap py-12 min-h-[55vh]">
