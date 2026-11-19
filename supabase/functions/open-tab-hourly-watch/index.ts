@@ -40,15 +40,30 @@ function creatorPriority(video:any):number {
   const channel=String(video.snippet?.channelTitle??"").toLowerCase().replace(/[^a-z0-9 ]/g,"");
   return PRIORITY_CREATORS.some(name=>channel.includes(name))?1:0;
 }
+const NON_ENGLISH_SCRIPT=/[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF\u0900-\u097F\u0980-\u09FF\u0A00-\u0A7F\u0A80-\u0AFF\u0B00-\u0B7F\u0B80-\u0BFF\u0C00-\u0C7F\u0C80-\u0CFF\u0D00-\u0D7F\u0E00-\u0E7F\u0E80-\u0EFF\u1000-\u109F\u1780-\u17FF\u3040-\u30FF\u3400-\u9FFF\uAC00-\uD7AF]/u;
+const ENGLISH_WORDS=new Set("the a an and or but if then than to of in on at for from with by about after before over under into is are was were be been being have has had do does did can could will would should may might this that these those it its not no yes you your we our they their he she his her my me what when where why how who which there here all any some more most many much every new latest live official watch video videos episode part today tonight highlights news review explained reaction interview podcast music game games football soccer match club league transfer goal goals season world championship cup winner winners build making made".split(" "));
+const NON_ENGLISH_WORDS=new Set("el la los las un una unos unas y o pero para por con sin del al de en es son fue esta este esto como que quien quienes donde cuando porque sobre entre muy mas tambien ya se su sus tu usted ustedes nosotros ellos ellas mis te le les hay era han ha soy eres somos estan estaba tiene tienen hizo hacen desde hasta contra tras futbol partido equipo equipos jugador jugadores liga copa mundial goles transferencia fichaje fichajes noticias hoy manana ayer ganar gano victoria derrota juego juegos cancion canciones nuevo nueva ultimo ultima musica".split(" "));
+function textWords(value:string){return value.toLowerCase().normalize("NFKD").replace(/[\u0300-\u036f]/g,"").match(/[a-z]+/g)||[]}
+function containsNonEnglishText(value:string){if(!value)return false;if(NON_ENGLISH_SCRIPT.test(value))return true;const tokens=textWords(value);if(tokens.length<2)return false;let foreign=0,english=0;for(const token of tokens){if(NON_ENGLISH_WORDS.has(token))foreign++;if(ENGLISH_WORDS.has(token))english++;}return foreign>=2&&foreign>english}
+function hasEnglishSignal(value:string,minWords=2){const tokens=textWords(value);if(tokens.length<minWords)return false;let evidence=0;for(const token of tokens)if(ENGLISH_WORDS.has(token))evidence++;return evidence>=Math.min(2,Math.ceil(tokens.length*0.12))}
+function isEnglishCandidate(video:any):boolean{
+ const snippet=video.snippet??{};
+ const language=[snippet.defaultAudioLanguage,snippet.defaultLanguage].filter(Boolean).map((v:string)=>v.toLowerCase().trim());
+ if(language.some((value:string)=>!/^en(?:[-_]|$)/.test(value)))return false;
+ const title=String(snippet.title??"");
+ const description=String(snippet.description??"");
+ const channel=String(snippet.channelTitle??"");
+ if([title,description,channel].some(containsNonEnglishText))return false;
+ if(!hasEnglishSignal(title,2))return false;
+ if(description.split(/\s+/).filter(Boolean).length>=12&&!hasEnglishSignal(description,8))return false;
+ return true;
+}
 function discoveryScore(item:{video:any;regions:Set<string>;ranks:number[]}):number {
   const views=Number(item.video.statistics?.viewCount??0);
   const averageRank=item.ranks.reduce((sum,n)=>sum+n,0)/Math.max(1,item.ranks.length);
   const language=String(item.video.snippet?.defaultAudioLanguage??item.video.snippet?.defaultLanguage??"").toLowerCase();
-  const text=[item.video.snippet?.title,item.video.snippet?.description].join(" ");
-  const letters=(text.match(/[A-Za-z]/g)??[]).length;
-  const latinLetters=(text.match(/[A-Za-zÀ-ÖØ-öø-ÿ]/g)??[]).length;
-  // Soft English preference only: never reject a video for language or script.
-  const englishBoost=language.startsWith("en")?10:(letters>0&&latinLetters/letters>0.8?5:0);
+  // English is enforced before scoring; retain a small metadata preference for explicit en tags.
+  const englishBoost=language.startsWith("en")?10:0;
   return item.regions.size*100 + Math.log10(Math.max(views,1))*8 +
     (51-averageRank)*0.25 + creatorPriority(item.video)*24 + englishBoost;
 }
@@ -141,8 +156,8 @@ Deno.serve(async (req: Request) => {
   }
 
   const candidates = [...byId.values()]
-    // Keep videos from every chart market and language eligible.
-    .filter(x => x.regions.size >= 1 && Number(x.video.statistics?.viewCount ?? 0) >= 500000)
+    // Keep every chart market eligible, but only publish videos with English language metadata/text.
+    .filter(x => x.regions.size >= 1 && Number(x.video.statistics?.viewCount ?? 0) >= 500000 && isEnglishCandidate(x.video))
     .sort((a,b) => discoveryScore(b)-discoveryScore(a));
 
   const published:any[] = [];
