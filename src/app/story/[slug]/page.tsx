@@ -157,7 +157,7 @@ export default async function StoryPage({ params }: StoryParams) {
       <CommentForm articleId={story.id} />
       {category?.slug === "movies" ? <MovieRating articleId={story.id} /> : null}
       {related?.length ? <section className="mt-14">
-        <div className="section-rule mb-6"><h2 className="font-black text-2xl">MORE LIKE THIS</h2></div>
+        <div className="section-rule mb-6"><h2 className="font-black text-2xl">RELATED · NEXT UP</h2></div>
         <div className="grid sm:grid-cols-3 gap-6">
           {related.map(r => <Link key={r.id} href={"/story/" + r.slug} className="font-black text-lg hover:text-[#f04438]">
             {r.title}<span className="block muted text-xs font-normal mt-2">Read next ↗</span>
