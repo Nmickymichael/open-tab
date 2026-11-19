@@ -11,17 +11,6 @@ const PRIORITY_CREATORS = [
   "linus tech tips","veritasium","mark rober","dude perfect","emma chamberlain",
   "casey neistat","jacksepticeye","pewdiepie","sidemen","colin and samir"
 ];
-const EXCLUDED_CONTENT = /\b(bollywood|hindi|bhojpuri|tamil|telugu|tollywood|kollywood|mollywood|sandalwood|punjabi song|desi song|indian movie|indian film|hindi dubbed|hindi song|south indian movie|full movie hindi|serial episode)\b/i;
-const NON_LATIN_REGIONAL = /[\u0600-\u06FF\u0400-\u052F\u0900-\u097F\u0980-\u09FF\u0B80-\u0BFF\u0C00-\u0C7F\u0C80-\u0CFF\u0D00-\u0D7F\u0E00-\u0E7F\u3040-\u30FF\u3400-\u9FFF\uAC00-\uD7AF]/;
-const LOW_VALUE_CONTENT = /\b(whatsapp status|status video|fan edit|movie scene|full movie|re-?upload|unofficial upload|slideshow lyrics)\b/i;
-function isEnglishCreatorVideo(video:any):boolean {
-  const snippet=video.snippet??{};
-  const language=String(snippet.defaultAudioLanguage??snippet.defaultLanguage??"").toLowerCase();
-  if(language && !language.startsWith("en")) return false;
-  const text=[snippet.title,snippet.description,snippet.channelTitle].join(" ");
-  if(EXCLUDED_CONTENT.test(text)||LOW_VALUE_CONTENT.test(text)||NON_LATIN_REGIONAL.test(text)) return false;
-  return true;
-}
 function genreForVideo(video:any):string {
   const text=[video.snippet?.title,video.snippet?.description,video.snippet?.channelTitle].join(" ").toLowerCase();
   if(/\b(mrwhosetheboss|mkbhd|marques brownlee|unbox therapy|linus tech tips|dave2d|tech review|smartphone|gadget|iphone|android|laptop)\b/.test(text)) return "Technology";
@@ -50,6 +39,12 @@ function genreForVideo(video:any):string {
 function creatorPriority(video:any):number {
   const channel=String(video.snippet?.channelTitle??"").toLowerCase().replace(/[^a-z0-9 ]/g,"");
   return PRIORITY_CREATORS.some(name=>channel.includes(name))?1:0;
+}
+function discoveryScore(item:{video:any;regions:Set<string>;ranks:number[]}):number {
+  const views=Number(item.video.statistics?.viewCount??0);
+  const averageRank=item.ranks.reduce((sum,n)=>sum+n,0)/Math.max(1,item.ranks.length);
+  return item.regions.size*100 + Math.log10(Math.max(views,1))*8 +
+    (51-averageRank)*0.25 + creatorPriority(item.video)*12;
 }
 const json = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), { status, headers: { "Content-Type":"application/json", "Cache-Control":"no-store" } });
@@ -140,15 +135,13 @@ Deno.serve(async (req: Request) => {
   }
 
   const candidates = [...byId.values()]
-    .filter(x => x.regions.size >= 2 && Number(x.video.statistics?.viewCount ?? 0) >= 25000 && isEnglishCreatorVideo(x.video))
-    .sort((a,b) => creatorPriority(b.video)-creatorPriority(a.video) ||
-      b.regions.size-a.regions.size ||
-      (a.ranks.reduce((s,n)=>s+n,0)/a.ranks.length)-(b.ranks.reduce((s,n)=>s+n,0)/b.ranks.length) ||
-      Number(b.video.statistics?.viewCount ?? 0)-Number(a.video.statistics?.viewCount ?? 0));
+    // Keep videos from every chart market and language eligible.
+    .filter(x => x.regions.size >= 1 && Number(x.video.statistics?.viewCount ?? 0) >= 10000)
+    .sort((a,b) => discoveryScore(b)-discoveryScore(a));
 
   const published:any[] = [];
-  const categoryCounts = new Map<string,number>();
   for (const candidate of candidates) {
+    if (published.length >= 12) break;
 
     const video = candidate.video;
     const id = String(video.id);
@@ -166,11 +159,7 @@ Deno.serve(async (req: Request) => {
     const channel = String(video.snippet.channelTitle).slice(0,160);
     const regions = [...candidate.regions].sort();
     const category = genreForVideo(video);
-    const priority = creatorPriority(video) === 1;
-    // Keep the hourly intake broad: max four per genre, with only two
-    // priority-channel slots so large creators never dominate the feed.
-    if ((categoryCounts.get(category) ?? 0) >= 4) continue;
-    if (priority && (categoryCounts.get(category+"::priority") ?? 0) >= 2) continue;
+    // Genre is descriptive metadata only; no category or creator caps.
     const source = "https://www.youtube.com/watch?v="+id;
     const thumbnail = video.snippet.thumbnails?.maxres?.url ??
       video.snippet.thumbnails?.standard?.url ??
@@ -198,9 +187,7 @@ Deno.serve(async (req: Request) => {
     if (!insertResponse.ok) return json({error:"Publishing failed",detail:await insertResponse.text()},502);
     const inserted = await insertResponse.json();
     published.push({title, youtube_id:id, creator:channel, category, regions, url:source, row:inserted[0] ?? null});
-    categoryCounts.set(category,(categoryCounts.get(category) ?? 0)+1);
-    if(priority) categoryCounts.set(category+"::priority",(categoryCounts.get(category+"::priority") ?? 0)+1);
   }
   if (published.length) return json({published:true, count:published.length, items:published, regionErrors});
-  return json({published:false, reason:"No eligible new multi-market trend passed the quality and duplicate checks.", candidatesChecked:candidates.length, regionErrors});
+  return json({published:false, reason:"No eligible new chart-discovery video passed the view threshold and duplicate check.", candidatesChecked:candidates.length, regionErrors});
 });
