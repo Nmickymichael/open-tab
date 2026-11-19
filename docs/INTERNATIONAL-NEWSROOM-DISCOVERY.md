@@ -3,8 +3,8 @@
 ## Discovery network
 - The publisher registry in `src/lib/global-news-sources.ts` spans Africa, Europe, Asia-Pacific, South Asia, the Middle East, North America and Latin America.
 - Category RSS sources continue to use Next.js's 10-minute revalidation cache.
-- GDELT DOC API is queried server-side for relevant categories and cached for 10 minutes. It is a discovery index, not an editorial authority.
-- NewsData.io is an optional secondary discovery source. Add `NEWSDATA_API_KEY` only to the Netlify server environment (never a `NEXT_PUBLIC_*` variable). Without the key, the app skips this provider and continues normally.
+- GDELT DOC API is queried server-side once through the shared global/world feed and cached for 10 minutes. This avoids firing a separate GDELT query for every category and respects its published rate-limit guidance. It is a discovery index, not an editorial authority.
+- NewsData.io is an optional secondary global discovery source. Add `NEWSDATA_API_KEY` only to the Netlify server environment (never a `NEXT_PUBLIC_*` variable). Without the key, the app skips this provider and continues normally. The free plan is limited to 200 credits/day and its news feed is delayed by 12 hours; OPEN TAB requests only 10 results and caches them for one hour. It is therefore supplementary discovery, not a breaking-news source. No paid plan is required.
 - Existing hourly YouTube discovery remains hourly; the country sample now spans 29 markets. The existing multi-market threshold and duplicate video check remain in place.
 
 ## Verification and duplicates
