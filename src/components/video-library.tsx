@@ -18,7 +18,9 @@ const GENRES=[
 
 function genreFor(video:VideoItem):string{
  const stored=String(video.watch_category||"").trim();
- const known=GENRES.find(g=>g.toLowerCase()===stored.toLowerCase());
+ const aliases:Record<string,string>={"tech":"Technology","education":"Education & Science","creators":"Vlogging","creator":"Vlogging","food & cooking":"Food","filmmakers":"Film & Video","youtube artists":"Art & Design"};
+ const normalized=aliases[stored.toLowerCase()]||stored;
+ const known=GENRES.find(g=>g.toLowerCase()===normalized.toLowerCase());
  if(known)return known;
  const text=[video.title,video.description,video.creator?.name,video.creator_display_name].join(" ").toLowerCase();
  if(/\b(mrwhosetheboss|mkbhd|marques brownlee|unbox therapy|linus tech tips|dave2d|short circuit)\b/.test(text)||/\b(phone|smartphone|laptop|tech review|gadget|android|iphone|pc build)\b/.test(text))return "Technology";
