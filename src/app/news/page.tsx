@@ -60,7 +60,7 @@ const SOURCES:FeedSource[]=[
   {name:"Pulse Live Kenya via Google News",url:"https://news.google.com/rss/search?q=site%3Apulselive.co.ke&hl=en-KE&gl=KE&ceid=KE%3Aen",region:"Kenya · Entertainment"},
   {name:"The Star Kenya via Google News",url:"https://news.google.com/rss/search?q=site%3Athe-star.co.ke&hl=en-KE&gl=KE&ceid=KE%3Aen",region:"Kenya · East Africa"},
   {name:"Mpasho via Google News",url:"https://news.google.com/rss/search?q=site%3Ampasho.co.ke&hl=en-KE&gl=KE&ceid=KE%3Aen",region:"Kenya · Entertainment"},
-  {name:"Business Daily Africa",url:"https://www.businessdailyafrica.com/bd/rss",region:"Kenya · Business"},
+  {name:"Business Daily Africa via Google News",url:"https://news.google.com/rss/search?q=site%3Abusinessdailyafrica.com&hl=en-KE&gl=KE&ceid=KE%3Aen",region:"Kenya · Business"},
   {name:"Kenyans.co.ke",url:"https://www.kenyans.co.ke/rss.xml",region:"Kenya · East Africa"}
 ];
 function decode(value:string){return value.replace(/<!\[CDATA\[([\s\S]*?)\]\]>/g,"$1").replace(/&amp;/g,"&").replace(/&quot;/g,'"').replace(/&#39;|&apos;/g,"'").replace(/&lt;/g,"<").replace(/&gt;/g,">").trim();}
