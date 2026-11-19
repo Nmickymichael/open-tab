@@ -12,7 +12,8 @@ const PRIORITY_CREATORS = [
   "casey neistat","jacksepticeye","pewdiepie","sidemen","colin and samir"
 ];
 const EXCLUDED_CONTENT = /\b(bollywood|hindi|bhojpuri|tamil|telugu|tollywood|kollywood|mollywood|sandalwood|punjabi song|desi song|indian movie|indian film|hindi dubbed|hindi song|south indian movie|full movie hindi|serial episode)\b/i;
-const NON_LATIN_REGIONAL = /[\u0900-\u097F\u0980-\u09FF\u0B80-\u0BFF\u0C00-\u0C7F\u0C80-\u0CFF\u0D00-\u0D7F]/;
+const NON_LATIN_REGIONAL = /[\u0600-\u06FF\u0400-\u052F\u0900-\u097F\u0980-\u09FF\u0B80-\u0BFF\u0C00-\u0C7F\u0C80-\u0CFF\u0D00-\u0D7F\u0E00-\u0E7F\u3040-\u30FF\u3400-\u9FFF\uAC00-\uD7AF]/;
+const LOW_VALUE_CONTENT = /\b(whatsapp status|status video|fan edit|movie scene|full movie|re-?upload|unofficial upload|slideshow lyrics)\b/i;
 function isEnglishCreatorVideo(video:any):boolean {
   const snippet=video.snippet??{};
   const language=String(snippet.defaultAudioLanguage??snippet.defaultLanguage??"").toLowerCase();
