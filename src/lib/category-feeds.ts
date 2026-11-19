@@ -56,4 +56,28 @@ function deduplicateStories(items:LiveCategoryStory[]){const accepted:LiveCatego
 async function getGdeltStories(slug:string):Promise<LiveCategoryStory[]>{const query=GDELT_QUERIES[slug];if(!query)return[];try{const url=new URL("https://api.gdeltproject.org/api/v2/doc/doc");url.search=new URLSearchParams({query:query+" sourcelang:english",mode:"ArtList",format:"json",maxrecords:"25",sort:"DateDesc"}).toString();const response=await fetch(url,{headers:{accept:"application/json"},signal:AbortSignal.timeout(6500),next:{revalidate:600}});if(!response.ok)return[];const payload=await response.json();return(payload.articles||[]).map((item:any)=>({title:String(item.title||"").trim(),url:String(item.url||""),description:"International discovery result surfaced by GDELT. Read and verify the original publisher report before publication.",source:String(item.domain||"GDELT discovery"),date:item.seendate?String(item.seendate).replace(/^(\d{4})(\d{2})(\d{2})T(\d{2})(\d{2})(\d{2})Z$/,"$1-$2-$3T$4:$5:$6Z"):"",image:typeof item.socialimage==="string"&&item.socialimage.startsWith("https://")?item.socialimage:null,imageCredit:null,imageLicense:null,imageSource:null,sourceRegion:item.sourcecountry||null})).filter((item:LiveCategoryStory)=>item.title&&!!publicArticleUrl(item.url))}catch{return[]}}
 async function getNewsDataStories(slug:string):Promise<LiveCategoryStory[]>{const key=process.env.NEWSDATA_API_KEY;if(!key)return[];const categoryMap:Record<string,string>={world:"world",news:"top",business:"business",technology:"technology",sports:"sports",entertainment:"entertainment",celebrities:"entertainment",music:"entertainment",movies:"entertainment",gaming:"technology",lifestyle:"lifestyle",education:"education"};const category=categoryMap[slug];if(!category)return[];try{const url=new URL("https://newsdata.io/api/1/latest");url.search=new URLSearchParams({apikey:key,language:"en",category}).toString();const response=await fetch(url,{headers:{accept:"application/json"},signal:AbortSignal.timeout(5500),next:{revalidate:600}});if(!response.ok)return[];const payload=await response.json();return(payload.results||[]).map((item:any)=>({title:String(item.title||"").trim(),url:String(item.link||""),description:clean(String(item.description||item.content||"")),source:String(item.source_name||item.source_id||"NewsData.io"),date:String(item.pubDate||""),image:typeof item.image_url==="string"&&item.image_url.startsWith("https://")?item.image_url:null,imageCredit:null,imageLicense:null,imageSource:null,sourceRegion:Array.isArray(item.country)?item.country.join(", "):null})).filter((item:LiveCategoryStory)=>item.title&&!!publicArticleUrl(item.url))}catch{return[]}}
 
-export async function getLiveCategoryStories(slug:string):Promise<LiveCategoryStory[]>{const sources=feeds[slug]||[];const batches=await Promise.all(sources.map(async source=>{try{const res=await fetch(source.url,{headers:{"user-agent":"OPEN TAB Newsroom/1.0 (+https://opentab-media.netlify.app)","accept":"application/rss+xml, application/atom+xml, application/xml, text/xml"},signal:AbortSignal.timeout(7000),next:{revalidate:600}});if(!res.ok)return[];const xml=await res.text();const blocks=[...xml.matchAll(/<(item|entry)\b[^>]*>([\s\S]*?)<\/\1>/gi)].map(m=>m[2]);return blocks.slice(0,12).map(block=>{const link=tag(block,"link")||block.match(/<link[^>]+href=["']([^"']+)["']/i)?.[1]||"";return{title:tag(block,"title"),url:link,description:clean(tag(block,"description")||tag(block,"summary")||tag(block,"content:encoded")),source:source.name,date:tag(block,"pubDate")||tag(block,"published")||tag(block,"updated"),image:image(block),imageCredit:imageCredit(block),imageLicense:imageLicense(block),imageSource:imageSource(block),sourceRegion:null}}).filter(x=>x.title&&/^https?:\/\//i.test(x.url))}catch{return[]}}));const [gdelt,newsdata]=await Promise.all([getGdeltStories(slug),getNewsDataStories(slug)]);const items=deduplicateStories([...batches.flat(),...gdelt,...newsdata]).slice(0,30);return fillMissingArticleImages(items)}
+export async function getLiveCategoryStories(slug:string):Promise<LiveCategoryStory[]>{
+ const sources=feeds[slug]||[];
+ const batches:LiveCategoryStory[][]=[];
+ let cursor=0;
+ const workers=Array.from({length:Math.min(10,sources.length)},async()=>{
+  while(cursor<sources.length){
+   const source=sources[cursor++];
+   try{
+    const res=await fetch(source.url,{headers:{"user-agent":"OPEN TAB Newsroom/1.0 (+https://opentab-media.netlify.app)","accept":"application/rss+xml, application/atom+xml, application/xml, text/xml"},signal:AbortSignal.timeout(7000),next:{revalidate:600}});
+    if(!res.ok)continue;
+    const xml=await res.text();
+    const blocks=[...xml.matchAll(/<(item|entry)\b[^>]*>([\s\S]*?)<\/\1>/gi)].map(m=>m[2]);
+    const parsed=blocks.slice(0,12).map(block=>{
+     const link=tag(block,"link")||block.match(/<link[^>]+href=["']([^"']+)["']/i)?.[1]||"";
+     return{title:tag(block,"title"),url:link,description:clean(tag(block,"description")||tag(block,"summary")||tag(block,"content:encoded")),source:source.name,date:tag(block,"pubDate")||tag(block,"published")||tag(block,"updated"),image:image(block),imageCredit:imageCredit(block),imageLicense:imageLicense(block),imageSource:imageSource(block),sourceRegion:null};
+    }).filter(x=>x.title&&/^https?:\/\//i.test(x.url));
+    batches.push(parsed);
+   }catch{/* One unavailable publisher must not block the wider newsroom. */}
+  }
+ });
+ await Promise.all(workers);
+ const [gdelt,newsdata]=await Promise.all([getGdeltStories(slug),getNewsDataStories(slug)]);
+ const items=deduplicateStories([...batches.flat(),...gdelt,...newsdata]).slice(0,60);
+ return fillMissingArticleImages(items);
+}
