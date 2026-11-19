@@ -34,6 +34,7 @@ OPEN TAB is an international digital publication covering sports, celebrities, c
    - `supabase/migrations/20261119_03_reader_video_library.sql`
    - `supabase/migrations/20261119_04_contributor_profiles.sql`
    - `supabase/migrations/20261119_05_photography_and_source_attribution.sql`
+   - `supabase/migrations/20261119_06_photo_license_urls.sql`
    - `supabase/migrations/20261119_05_photography_and_source_attribution.sql`
    - `supabase/migrations/20261120_01_advertising_sponsorships.sql`
 6. Run `supabase/tests/rls_smoke_test.sql` and complete identity-based tests for anon, author, editor and admin roles.
@@ -128,7 +129,7 @@ Before opening the site to the public:
 - Configure backups, monitoring, error reporting, retention and incident response.
 - Run the GitHub Actions typecheck/build workflow and resolve any failures.
 - Test keyboard navigation, screen-reader labels, mobile layouts, image alt text, page performance and Core Web Vitals.
-- Use only media you own, have licensed, or are authorised to embed. Video entries use YouTube's privacy-enhanced embed host. Cover photography must carry a verified photographer/agency credit, original image-source URL and licence/permission details in the editorial desk. Never treat a publicly visible image as automatically reusable. AI-generated artwork must be labelled and must never be presented as documentary news photography. Social and viral coverage should link to original public posts and use platform-authorised embeds; do not reproduce full creator posts or videos without permission. Cover photography must carry a verified photographer/agency credit, original image-source URL and licence/permission details in the editorial desk. Never treat a publicly visible image as automatically reusable. AI-generated artwork must be labelled and must never be presented as documentary news photography. Social and viral coverage should link to original public posts and use platform-authorised embeds; do not reproduce full creator posts or videos without permission.
+- Use only media you own, have licensed, or are authorised to embed. Video entries use YouTube's privacy-enhanced embed host. Cover photography must carry a verified photographer/agency credit, original image-source URL and licence/permission details and a direct licence URL where applicable in the editorial desk. Never treat a publicly visible image as automatically reusable. AI-generated artwork must be labelled and must never be presented as documentary news photography. Social and viral coverage should link to original public posts and use platform-authorised embeds; do not reproduce full creator posts or videos without permission. Cover photography must carry a verified photographer/agency credit, original image-source URL and licence/permission details in the editorial desk. Never treat a publicly visible image as automatically reusable. AI-generated artwork must be labelled and must never be presented as documentary news photography. Social and viral coverage should link to original public posts and use platform-authorised embeds; do not reproduce full creator posts or videos without permission.
 
 ## What remains intentionally separate
 
