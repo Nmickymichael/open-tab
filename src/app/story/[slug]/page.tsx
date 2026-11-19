@@ -91,7 +91,7 @@ export default async function StoryPage({ params }: StoryParams) {
     "@type": "NewsArticle",
     headline: story.title,
     description: story.seo_description || story.excerpt || "",
-    image: story.cover_image ? [{ "@type": "ImageObject", url: story.cover_image, creditText: story.cover_image_credit || undefined, license: story.cover_image_license || undefined, acquireLicensePage: story.cover_image_source || undefined }] : undefined,
+    image: story.cover_image ? [{ "@type": "ImageObject", url: story.cover_image, creditText: story.cover_image_credit || undefined, license: story.cover_image_license_url || story.cover_image_license || undefined, acquireLicensePage: story.cover_image_source || undefined }] : undefined,
     datePublished: story.published_at,
     dateModified: story.updated_at,
     author: { "@type": "Person", name: author?.display_name || "OPEN TAB Editorial" },
@@ -115,7 +115,7 @@ export default async function StoryPage({ params }: StoryParams) {
       {story.cover_image && (
         <figure className="mt-9">
           <img src={story.cover_image} alt={story.cover_image_alt || story.title} className="w-full max-h-[560px] object-cover" />
-          {(story.cover_image_alt || story.cover_image_credit) && <figcaption className="muted mt-2 text-xs">{story.cover_image_alt}{story.cover_image_credit ? <span>{story.cover_image_alt ? " · " : ""}Photo: {story.cover_image_credit}</span> : null}{story.cover_image_source ? <span> · <a className="underline" href={story.cover_image_source} target="_blank" rel="noopener noreferrer">Image source</a></span> : null}{story.cover_image_license ? <span> · {story.cover_image_license}</span> : null}</figcaption>}
+          {(story.cover_image_alt || story.cover_image_credit) && <figcaption className="muted mt-2 text-xs">{story.cover_image_alt}{story.cover_image_credit ? <span>{story.cover_image_alt ? " · " : ""}Photo: {story.cover_image_credit}</span> : null}{story.cover_image_source ? <span> · <a className="underline" href={story.cover_image_source} target="_blank" rel="noopener noreferrer">Image source</a></span> : null}{story.cover_image_license ? <span> · {story.cover_image_license_url ? <a className="underline" href={story.cover_image_license_url} target="_blank" rel="noopener noreferrer">{story.cover_image_license}</a> : story.cover_image_license}</span> : null}</figcaption>}
         </figure>
       )}
       {(story.source_url || story.source_platform) && <aside className="mt-8 border-y border-neutral-300 py-4"><div className="eyebrow">ORIGINAL SOURCE</div><p className="mt-2 text-sm">{story.source_platform || "Source"}{story.source_url ? <> · <a className="accent underline" href={story.source_url} target="_blank" rel="noopener noreferrer">View original reporting / post ↗</a></> : null}</p></aside>}
