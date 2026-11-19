@@ -18,7 +18,7 @@ function isEnglishCreatorVideo(video:any):boolean {
   const language=String(snippet.defaultAudioLanguage??snippet.defaultLanguage??"").toLowerCase();
   if(language && !language.startsWith("en")) return false;
   const text=[snippet.title,snippet.description,snippet.channelTitle].join(" ");
-  if(EXCLUDED_CONTENT.test(text)||NON_LATIN_REGIONAL.test(text)) return false;
+  if(EXCLUDED_CONTENT.test(text)||LOW_VALUE_CONTENT.test(text)||NON_LATIN_REGIONAL.test(text)) return false;
   return true;
 }
 function genreForVideo(video:any):string {
