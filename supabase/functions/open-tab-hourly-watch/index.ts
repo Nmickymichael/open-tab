@@ -90,7 +90,8 @@ Deno.serve(async (req: Request) => {
     const verdict = "Trend spotlight, not a full content review. Selection is based on public YouTube chart placement and metadata; OPEN TAB has not independently assessed every claim or the full video's quality.";
     const payload = {
       title, slug:slugify(title)+"-"+id.slice(0,6).toLowerCase(),
-      description, youtube_id:id, thumbnail_url:thumbnail, status:"published",
+      description, youtube_id:id, thumbnail_url:thumbnail,
+      view_count:Number(video.statistics?.viewCount ?? 0), status:"published",
       published_at:new Date().toISOString(), video_type:"video", is_watch_review:true,
       watch_category:category, why_trending:why, editorial_verdict:verdict,
       source_url:source, creator_display_name:channel
