@@ -4,7 +4,7 @@ const REGIONS = ["US","CA","MX","BR","GB","DE","FR","ZA","NG","AE","IN","JP","KR
 const CATEGORY: Record<string,string> = {
   "1":"Movies","2":"Lifestyle","10":"Music","15":"Lifestyle","17":"Viral Culture",
   "20":"Gaming","22":"Creators","23":"Viral Culture","24":"Movies",
-  "25":"Viral Culture","26":"Lifestyle","27":"Tech","28":"Tech"
+  "25":"News","26":"Lifestyle","27":"Education","28":"Tech"
 };
 const json = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), { status, headers: { "Content-Type":"application/json", "Cache-Control":"no-store" } });
@@ -56,7 +56,10 @@ Deno.serve(async (req: Request) => {
       (a.ranks.reduce((s,n)=>s+n,0)/a.ranks.length)-(b.ranks.reduce((s,n)=>s+n,0)/b.ranks.length) ||
       Number(b.video.statistics?.viewCount ?? 0)-Number(a.video.statistics?.viewCount ?? 0));
 
+  const published:any[] = [];
+  const categoryCounts = new Map<string,number>();
   for (const candidate of candidates) {
+    if (published.length >= 8) break;
     const video = candidate.video;
     const id = String(video.id);
     const duplicateUrl = new URL(supabaseUrl + "/rest/v1/videos");
@@ -73,6 +76,7 @@ Deno.serve(async (req: Request) => {
     const channel = String(video.snippet.channelTitle).slice(0,160);
     const regions = [...candidate.regions].sort();
     const category = CATEGORY[String(video.snippet.categoryId)] ?? "Viral Culture";
+    if ((categoryCounts.get(category) ?? 0) >= 2) continue;
     const source = "https://www.youtube.com/watch?v="+id;
     const thumbnail = video.snippet.thumbnails?.maxres?.url ??
       video.snippet.thumbnails?.standard?.url ??
@@ -98,7 +102,9 @@ Deno.serve(async (req: Request) => {
     });
     if (!insertResponse.ok) return json({error:"Publishing failed",detail:await insertResponse.text()},502);
     const inserted = await insertResponse.json();
-    return json({published:true, title, youtube_id:id, creator:channel, category, regions, url:source, row:inserted[0] ?? null, regionErrors});
+    published.push({title, youtube_id:id, creator:channel, category, regions, url:source, row:inserted[0] ?? null});
+    categoryCounts.set(category,(categoryCounts.get(category) ?? 0)+1);
   }
+  if (published.length) return json({published:true, count:published.length, items:published, regionErrors});
   return json({published:false, reason:"No eligible new multi-market trend passed the quality and duplicate checks.", candidatesChecked:candidates.length, regionErrors});
 });
