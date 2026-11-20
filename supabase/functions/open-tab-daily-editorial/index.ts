@@ -10,13 +10,25 @@ const regions=[
 function nairobiDay(){const p=new Intl.DateTimeFormat("en-CA",{timeZone:"Africa/Nairobi",year:"numeric",month:"2-digit",day:"2-digit"}).formatToParts(new Date());const v=(k:string)=>p.find(x=>x.type===k)?.value??"";return v("year")+"-"+v("month")+"-"+v("day")}
 async function discover(url:string,key:string){
  const day=nairobiDay();
- const batches=await Promise.all(regions.map(async r=>{
+ const batches:any[][]=[];
+ for(const r of regions){
   const u=new URL("https://api.gdeltproject.org/api/v2/doc/doc");
   u.search=new URLSearchParams({query:r.q,mode:"ArtList",format:"json",maxrecords:"35",sort:"HybridRel",timespan:"24h"}).toString();
-  const res=await fetch(u);if(!res.ok)throw new Error("GDELT "+r.region+" "+res.status);
-  const data=await res.json();
-  return (data.articles??[]).map((a:any)=>({headline:String(a.title??"").slice(0,500),source_name:String(a.domain??"Unknown source").slice(0,180),source_url:String(a.url??""),source_published_at:a.seendate?new Date(String(a.seendate).replace(/^(\d{4})(\d{2})(\d{2})T(\d{2})(\d{2})(\d{2})Z$/,"$1-$2-$3T$4:$5:$6Z")).toISOString():null,region:r.region,story_date:day,status:"new"}));
- }));
+  let payload:any=null;
+  for(let attempt=0;attempt<4;attempt++){
+   const res=await fetch(u);
+   if(res.ok){payload=await res.json();break;}
+   if(res.status!==429)throw new Error("GDELT "+r.region+" "+res.status);
+   await new Promise(resolve=>setTimeout(resolve,1500*(attempt+1)));
+  }
+  if(!payload)throw new Error("GDELT rate limit persisted for "+r.region);
+  batches.push((payload.articles??[]).map((a:any)=>{
+   const raw=String(a.seendate??"").replace(/^(\\d{4})(\\d{2})(\\d{2})T(\\d{2})(\\d{2})(\\d{2})Z$/,"$1-$2-$3T$4:$5:$6Z");
+   const parsed=raw?new Date(raw):null;
+   return {headline:String(a.title??"").slice(0,500),source_name:String(a.domain??"Unknown source").slice(0,180),source_url:String(a.url??""),source_published_at:parsed&&!Number.isNaN(parsed.getTime())?parsed.toISOString():null,region:r.region,story_date:day,status:"new"};
+  }));
+  await new Promise(resolve=>setTimeout(resolve,1200));
+ }
  const leads:any[]=[];for(const batch of batches)for(const x of batch){if(x.headline&&/^https:\/\//i.test(x.source_url)&&!leads.some(y=>y.source_url===x.source_url))leads.push(x);if(leads.length>=60)break}
  if(!leads.length){console.log("No eligible international story leads",day);return}
  const res=await fetch(url+"/rest/v1/editorial_story_leads",{method:"POST",headers:{apikey:key,Authorization:"Bearer "+key,"Content-Type":"application/json",Prefer:"resolution=ignore-duplicates,return=minimal"},body:JSON.stringify(leads)});
