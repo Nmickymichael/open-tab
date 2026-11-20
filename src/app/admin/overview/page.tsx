@@ -17,7 +17,7 @@ type StaffProfile = { id: string; display_name: string | null; role: string };
 const navGroups = [
   { label: "WORKSPACE", items: [{ label: "Overview", icon: LayoutDashboard, href: "/admin/overview" }, { label: "Stories", icon: FileText, href: "/admin" }, { label: "Video library", icon: Video, href: "/admin" }, { label: "Creators", icon: Users, href: "/admin" }] },
   { label: "AUDIENCE", items: [{ label: "Community", icon: MessageSquare, href: "/admin" }, { label: "Newsletter", icon: Megaphone, href: "/admin" }, { label: "Analytics", icon: TrendingUp, href: "/admin" }] },
-  { label: "MANAGEMENT", items: [{ label: "Editorial desk", icon: BookOpen, href: "/admin/desk" }, { label: "Advertising", icon: Megaphone, href: "/admin/monetization" }, { label: "Settings & audit", icon: Settings, href: "/admin" }] }
+  { label: "MANAGEMENT", items: [{ label: "Publisher health", icon: Activity, href: "/admin/publishing-health" }, { label: "Editorial desk", icon: BookOpen, href: "/admin/desk" }, { label: "Advertising", icon: Megaphone, href: "/admin/monetization" }, { label: "Settings & audit", icon: Settings, href: "/admin" }] }
 ];
 
 function MetricCard({ metric }: { metric: Metric }) {
