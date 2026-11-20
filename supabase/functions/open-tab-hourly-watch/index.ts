@@ -91,6 +91,10 @@ Deno.serve(async (req: Request) => {
   if (!authCheck.ok || await authCheck.json() !== true) return json({ error:"Unauthorized" },401);
   if (!youtubeKey) return json({ error:"YOUTUBE_API_KEY is not configured in Supabase Edge Function Secrets." },503);
 
+  // A full multi-market discovery run can take longer than pg_net's 5-second request window.
+  // Acknowledge the cron request immediately and let Supabase keep the work alive in the background.
+  EdgeRuntime.waitUntil((async () => {
+    try {
   // Refresh up to 50 existing TV items in one YouTube statistics request,
   // then persist all returned counts through one restricted database RPC.
   // This runs on the existing hourly schedule, never on page requests.
@@ -267,4 +271,9 @@ Deno.serve(async (req: Request) => {
   }
   if (published.length) return json({published:true, count:published.length, items:published, regionErrors});
   return json({published:false, reason:"No eligible chart or targeted-search video passed the English screen, 100,000-100,000-view threshold and duplicate check.", candidatesChecked:candidates.length, regionErrors});
+    } catch (error) {
+      console.error("OPEN TAB WATCH background run failed", error);
+    }
+  })());
+  return json({ accepted: true, message: "WATCH discovery started in the background." }, 202);
 });
