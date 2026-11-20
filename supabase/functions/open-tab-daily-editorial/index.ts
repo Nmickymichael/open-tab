@@ -8,34 +8,47 @@ const regions=[
  {region:"Middle East",q:'("Middle East" OR Israel OR Palestine OR Iran OR Saudi Arabia OR UAE OR Lebanon)'}
 ];
 function nairobiDay(){const p=new Intl.DateTimeFormat("en-CA",{timeZone:"Africa/Nairobi",year:"numeric",month:"2-digit",day:"2-digit"}).formatToParts(new Date());const v=(k:string)=>p.find(x=>x.type===k)?.value??"";return v("year")+"-"+v("month")+"-"+v("day")}
+const RSS_SOURCES=[
+ {name:"BBC News",region:"Europe / Global",url:"https://feeds.bbci.co.uk/news/world/rss.xml"},
+ {name:"The Guardian",region:"Europe / Global",url:"https://www.theguardian.com/world/rss"},
+ {name:"Al Jazeera",region:"Middle East / Global",url:"https://www.aljazeera.com/xml/rss/all.xml"},
+ {name:"Deutsche Welle",region:"Europe / Global",url:"https://rss.dw.com/xml/rss-en-all"},
+ {name:"France 24",region:"Europe / Global",url:"https://www.france24.com/en/rss"},
+ {name:"BBC Africa",region:"Africa",url:"https://feeds.bbci.co.uk/news/world/africa/rss.xml"},
+ {name:"Africanews",region:"Africa",url:"https://www.africanews.com/feed/rss"},
+ {name:"Daily Nation",region:"East Africa",url:"https://nation.africa/kenya/rss.xml"},
+ {name:"Channel News Asia",region:"Asia-Pacific",url:"https://www.channelnewsasia.com/api/v1/rss-outbound-feed?_format=xml"},
+ {name:"Dawn",region:"South Asia",url:"https://www.dawn.com/feeds/home"},
+ {name:"ABC News Australia",region:"Asia-Pacific",url:"https://www.abc.net.au/news/feed/51120/rss.xml"},
+ {name:"Associated Press",region:"Americas / Global",url:"https://news.google.com/rss/search?q=site%3Aapnews.com+world&hl=en&gl=US&ceid=US%3Aen"}
+];
+function decodeXml(value:string){return value.replace(/<!\\[CDATA\\[([\\s\\S]*?)\\]\\]>/g,"$1").replace(/&amp;/g,"&").replace(/&lt;/g,"<").replace(/&gt;/g,">").replace(/&quot;/g,'"').replace(/&#39;/g,"'").trim()}
+function tagValue(block:string,tag:string){const match=block.match(new RegExp("<"+tag+"(?:\\s[^>]*)?>([\\s\\S]*?)</"+tag+">","i"));return match?decodeXml(match[1]):""}
 async function discover(url:string,key:string){
  const day=nairobiDay();
- const batches:any[][]=[];
- for(const r of regions){
-  const u=new URL("https://api.gdeltproject.org/api/v2/doc/doc");
-  u.search=new URLSearchParams({query:r.q,mode:"ArtList",format:"json",maxrecords:"35",sort:"HybridRel",timespan:"24h"}).toString();
-  let payload:any=null;
-  for(let attempt=0;attempt<4;attempt++){
-   const res=await fetch(u);
-   if(res.ok){payload=await res.json();break;}
-   if(res.status!==429)throw new Error("GDELT "+r.region+" "+res.status);
-   await new Promise(resolve=>setTimeout(resolve,1500*(attempt+1)));
-  }
-  if(!payload)throw new Error("GDELT rate limit persisted for "+r.region);
-  batches.push((payload.articles??[]).map((a:any)=>{
-   const raw=String(a.seendate??"").replace(/^(\\d{4})(\\d{2})(\\d{2})T(\\d{2})(\\d{2})(\\d{2})Z$/,"$1-$2-$3T$4:$5:$6Z");
-   const parsed=raw?new Date(raw):null;
-   return {headline:String(a.title??"").slice(0,500),source_name:String(a.domain??"Unknown source").slice(0,180),source_url:String(a.url??""),source_published_at:parsed&&!Number.isNaN(parsed.getTime())?parsed.toISOString():null,region:r.region,story_date:day,status:"new"};
-  }));
-  await new Promise(resolve=>setTimeout(resolve,1200));
- }
- const leads:any[]=[];for(const batch of batches)for(const x of batch){if(x.headline&&/^https:\/\//i.test(x.source_url)&&!leads.some(y=>y.source_url===x.source_url))leads.push(x);if(leads.length>=60)break}
- if(!leads.length){console.log("No eligible international story leads",day);return}
- const res=await fetch(url+"/rest/v1/editorial_story_leads",{method:"POST",headers:{apikey:key,Authorization:"Bearer "+key,"Content-Type":"application/json",Prefer:"resolution=ignore-duplicates,return=minimal"},body:JSON.stringify(leads)});
- if(!res.ok)throw new Error("Saving story leads failed: "+res.status+" "+(await res.text()).slice(0,300));
- console.log("Daily story discovery saved",leads.length,"candidate leads for",day);
+ const feeds=await Promise.all(RSS_SOURCES.map(async source=>{
+  try{
+   const response=await fetch(source.url,{headers:{"User-Agent":"OPEN TAB newsroom discovery/1.0","Accept":"application/rss+xml, application/xml, text/xml"}});
+   if(!response.ok){console.warn("RSS source unavailable",source.name,response.status);return []}
+   const xml=await response.text(),items=xml.match(/<item\\b[\\s\\S]*?<\\/item>/gi)??[];
+   return items.slice(0,12).map(block=>{
+    const title=tagValue(block,"title"),link=tagValue(block,"link"),published=tagValue(block,"pubDate");
+    const date=published?new Date(published):null;
+    const sourceTag=block.match(/<source[^>]*>([\\s\\S]*?)<\\/source>/i);
+    return {headline:title.slice(0,500),source_name:sourceTag?decodeXml(sourceTag[1]):source.name,source_url:link,source_published_at:date&&!Number.isNaN(date.getTime())?date.toISOString():null,region:source.region,story_date:day,status:"new"};
+   }).filter((row:any)=>row.headline&&/^https:\\/\\//i.test(row.source_url));
+  }catch(error){console.warn("RSS source failed",source.name,error);return []}
+ }));
+ const leads:any[]=[];
+ for(const batch of feeds)for(const row of batch){if(!leads.some(x=>x.source_url===row.source_url))leads.push(row);if(leads.length>=80)break}
+ if(!leads.length)throw new Error("No eligible RSS story leads returned from the configured international newsrooms.");
+ const response=await fetch(url+"/rest/v1/editorial_story_leads",{method:"POST",headers:{apikey:key,Authorization:"Bearer "+key,"Content-Type":"application/json",Prefer:"resolution=ignore-duplicates,return=minimal"},body:JSON.stringify(leads)});
+ if(!response.ok)throw new Error("Saving international story leads failed: "+response.status+" "+(await response.text()).slice(0,300));
+ console.log("Daily international newsroom discovery completed",JSON.stringify({sources:RSS_SOURCES.length,leads:leads.length,date:day}));
 }
 async function health(url:string,key:string){
+ const localHour=Number(new Intl.DateTimeFormat('en-GB',{timeZone:'Africa/Nairobi',hour:'2-digit',hourCycle:'h23'}).format(new Date()));
+ if(localHour<18){console.log('Publisher health check deferred until 18:00 EAT');return}
  const day=nairobiDay(), next=new Date(day+"T00:00:00Z");next.setUTCDate(next.getUTCDate()+1);
  const start=day+"T00:00:00+03:00",end=next.toISOString().slice(0,10)+"T00:00:00+03:00";
  async function count(table:string){const u=new URL(url+"/rest/v1/"+table);u.search=new URLSearchParams({select:"id",status:"eq.published",published_at:"gte."+start,"published_at":"lt."+end,limit:"1"}).toString();const r=await fetch(u,{headers:{apikey:key,Authorization:"Bearer "+key,Prefer:"count=exact",Range:"0-0"}});if(!r.ok)throw new Error("Count "+table+" failed: "+r.status);const n=Number((r.headers.get("content-range")??"").split("/")[1]);return Number.isFinite(n)?n:(await r.json()).length}
