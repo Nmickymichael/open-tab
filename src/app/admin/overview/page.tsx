@@ -13,6 +13,7 @@ import { supabase } from "@/lib/supabase";
 type Metric = { label: string; value: number; change: string; icon: typeof FileText };
 type Article = { id: string; title: string; status: string; updated_at: string; author_id?: string };
 type StaffProfile = { id: string; display_name: string | null; role: string };
+type PublisherHealth = { event_date: string; status: string; published_article_count: number; watch_video_count: number; details: string | null };
 
 const navGroups = [
   { label: "WORKSPACE", items: [{ label: "Overview", icon: LayoutDashboard, href: "/admin/overview" }, { label: "Stories", icon: FileText, href: "/admin" }, { label: "Video library", icon: Video, href: "/admin" }, { label: "Creators", icon: Users, href: "/admin" }] },
@@ -38,6 +39,7 @@ export default function AdminOverviewPage() {
   const [articles, setArticles] = useState<Article[]>([]);
   const [staff, setStaff] = useState<StaffProfile[]>([]);
   const [metrics, setMetrics] = useState({ stories: 0, published: 0, videos: 0, readers: 0, comments: 0, views: 0 });
+  const [publisherHealth, setPublisherHealth] = useState<PublisherHealth | null>(null);
   const [activeNav, setActiveNav] = useState("Overview");
 
   const loadDashboard = useCallback(async () => {
@@ -53,7 +55,7 @@ export default function AdminOverviewPage() {
       return;
     }
     setRole("admin");
-    const [storyCount, publishedCount, videoCount, readerCount, commentCount, viewCount, recent, team] = await Promise.all([
+    const [storyCount, publishedCount, videoCount, readerCount, commentCount, viewCount, recent, team, health] = await Promise.all([
       supabase.from("articles").select("id", { count: "exact", head: true }),
       supabase.from("articles").select("id", { count: "exact", head: true }).eq("status", "published"),
       supabase.from("videos").select("id", { count: "exact", head: true }),
@@ -61,11 +63,13 @@ export default function AdminOverviewPage() {
       supabase.from("comments").select("id", { count: "exact", head: true }),
       supabase.from("article_views").select("id", { count: "exact", head: true }),
       supabase.from("articles").select("id,title,status,updated_at,author_id").order("updated_at", { ascending: false }).limit(6),
-      supabase.from("profiles").select("id,display_name,role").in("role", ["admin", "editor", "author"]).order("display_name").limit(6)
+      supabase.from("profiles").select("id,display_name,role").in("role", ["admin", "editor", "author"]).order("display_name").limit(6),
+      supabase.from("publisher_health_events").select("event_date,status,published_article_count,watch_video_count,details").order("event_date", { ascending: false }).limit(1).maybeSingle()
     ]);
     setMetrics({ stories: storyCount.count || 0, published: publishedCount.count || 0, videos: videoCount.count || 0, readers: readerCount.count || 0, comments: commentCount.count || 0, views: viewCount.count || 0 });
     setArticles((recent.data || []) as Article[]);
     setStaff((team.data || []) as StaffProfile[]);
+    setPublisherHealth((health.data || null) as PublisherHealth | null);
     setLoading(false);
   }, []);
 
@@ -119,6 +123,8 @@ export default function AdminOverviewPage() {
         <div className="mx-auto max-w-[1500px] px-5 py-8 md:px-9">
           <div className="flex flex-wrap items-end justify-between gap-4"><div><p className="text-xs text-slate-500">Wednesday · OPEN TAB operations</p><h2 className="mt-2 text-3xl font-semibold tracking-tight md:text-4xl">Good to see you back.</h2><p className="mt-2 text-sm text-slate-400">Here is what is happening across your publication today.</p></div><Link href="/admin" className="inline-flex items-center gap-2 rounded-xl bg-[#f04438] px-4 py-3 text-xs font-bold text-white hover:bg-[#d9362c]"><Plus size={15}/> Create a story</Link></div>
           <div className="mt-8 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">{cards.map(card=><MetricCard key={card.label} metric={card}/>)}</div>
+          {publisherHealth?.status === "missed" && <Link href="/admin/publishing-health" className="mt-5 block rounded-2xl border border-red-500/30 bg-red-500/[.08] p-5 hover:border-red-400"><div className="text-xs font-black uppercase tracking-widest text-red-300">Publisher alert · {publisherHealth.event_date}</div><p className="mt-2 text-sm font-semibold text-white">Daily news publication target missed.</p><p className="mt-1 text-xs text-slate-400">{publisherHealth.details || "No news article was recorded for the day."} Open the publisher health monitor to review story leads.</p></Link>}
+          {publisherHealth?.status === "healthy" && <Link href="/admin/publishing-health" className="mt-5 block rounded-2xl border border-emerald-500/20 bg-emerald-500/[.05] p-4 text-xs text-emerald-300">Publisher check {publisherHealth.event_date}: {publisherHealth.published_article_count} news article(s) published. View health history ↗</Link>}
           <div className="mt-7 grid gap-5 xl:grid-cols-[1.55fr_1fr]">
             <section className="rounded-2xl border border-white/[.07] bg-[#15171c] p-5 md:p-6"><div className="flex items-center justify-between"><div><h3 className="font-semibold text-white">Editorial activity</h3><p className="mt-1 text-xs text-slate-500">Your latest content updates</p></div><Link href="/admin" className="text-xs font-semibold text-[#ff766d]">Manage stories ↗</Link></div><div className="mt-6 overflow-x-auto"><table className="w-full min-w-[480px] text-left"><thead><tr className="border-b border-white/[.07] text-[10px] uppercase tracking-wider text-slate-500"><th className="pb-3 font-medium">Story</th><th className="pb-3 font-medium">Status</th><th className="pb-3 font-medium">Last updated</th></tr></thead><tbody>{articles.map(article=><tr key={article.id} className="border-b border-white/[.05] last:border-0"><td className="max-w-[270px] py-4 pr-4"><p className="truncate text-sm font-medium text-slate-200">{article.title}</p><p className="mt-1 text-[10px] text-slate-600">Editorial content</p></td><td className="py-4"><span className={`rounded-full px-2.5 py-1 text-[10px] font-semibold ${article.status==="published"?"bg-emerald-500/10 text-emerald-400":"bg-amber-500/10 text-amber-300"}`}>{article.status}</span></td><td className="py-4 text-xs text-slate-500">{new Date(article.updated_at).toLocaleDateString()}</td></tr>)}{!articles.length&&<tr><td colSpan={3} className="py-8 text-center text-sm text-slate-500">No stories yet. Create your first article from the editorial desk.</td></tr>}</tbody></table></div></section>
             <section className="rounded-2xl border border-white/[.07] bg-[#15171c] p-5 md:p-6"><div className="flex items-center justify-between"><div><h3 className="font-semibold">Editorial team</h3><p className="mt-1 text-xs text-slate-500">Provisioned newsroom accounts</p></div><Users size={18} className="text-[#f04438]"/></div><div className="mt-5 space-y-4">{staff.map(person=><div key={person.id} className="flex items-center gap-3"><div className="grid h-9 w-9 place-items-center rounded-full bg-white/[.07] text-xs font-bold text-[#ff766d]">{(person.display_name||"OT").slice(0,2).toUpperCase()}</div><div className="min-w-0 flex-1"><p className="truncate text-sm font-medium">{person.display_name||"Editorial team member"}</p><p className="mt-0.5 text-[10px] capitalize text-slate-500">{person.role}</p></div><span className="h-2 w-2 rounded-full bg-emerald-400"/></div>)}{!staff.length&&<p className="text-sm text-slate-500">No additional staff accounts found.</p>}</div><Link href="/admin/desk" className="mt-6 inline-flex items-center gap-2 text-xs font-semibold text-[#ff766d]">Manage editorial workflow <ArrowDownRight size={14}/></Link></section>
