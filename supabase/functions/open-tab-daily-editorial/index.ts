@@ -22,7 +22,7 @@ const RSS_SOURCES=[
  {name:"ABC News Australia",region:"Asia-Pacific",url:"https://www.abc.net.au/news/feed/51120/rss.xml"},
  {name:"Associated Press",region:"Americas / Global",url:"https://news.google.com/rss/search?q=site%3Aapnews.com+world&hl=en&gl=US&ceid=US%3Aen"}
 ];
-function decodeXml(value:string){return value.replace(/<!\\[CDATA\\[([\\s\\S]*?)\\]\\]>/g,"$1").replace(/&amp;/g,"&").replace(/&lt;/g,"<").replace(/&gt;/g,">").replace(/&quot;/g,'"').replace(/&#39;/g,"'").trim()}
+function decodeXml(value:string){return value.replace(/<!\[CDATA\[([\s\S]*?)\]\]>/g,"$1").replace(/&amp;/g,"&").replace(/&lt;/g,"<").replace(/&gt;/g,">").replace(/&quot;/g,'"').replace(/&#39;/g,"'").trim()}
 function tagValue(block:string,tag:string){const match=block.match(new RegExp("<"+tag+"(?:\\s[^>]*)?>([\\s\\S]*?)</"+tag+">","i"));return match?decodeXml(match[1]):""}
 async function discover(url:string,key:string){
  const day=nairobiDay();
@@ -30,13 +30,13 @@ async function discover(url:string,key:string){
   try{
    const response=await fetch(source.url,{headers:{"User-Agent":"OPEN TAB newsroom discovery/1.0","Accept":"application/rss+xml, application/xml, text/xml"}});
    if(!response.ok){console.warn("RSS source unavailable",source.name,response.status);return []}
-   const xml=await response.text(),items=xml.match(/<item\\b[\\s\\S]*?<\\/item>/gi)??[];
+   const xml=await response.text(),items=xml.match(/<item\b[\s\S]*?<\/item>/gi)??[];
    return items.slice(0,12).map(block=>{
     const title=tagValue(block,"title"),link=tagValue(block,"link"),published=tagValue(block,"pubDate");
     const date=published?new Date(published):null;
-    const sourceTag=block.match(/<source[^>]*>([\\s\\S]*?)<\\/source>/i);
+    const sourceTag=block.match(/<source[^>]*>([\s\S]*?)<\/source>/i);
     return {headline:title.slice(0,500),source_name:sourceTag?decodeXml(sourceTag[1]):source.name,source_url:link,source_published_at:date&&!Number.isNaN(date.getTime())?date.toISOString():null,region:source.region,story_date:day,status:"new"};
-   }).filter((row:any)=>row.headline&&/^https:\\/\\//i.test(row.source_url));
+   }).filter((row:any)=>row.headline&&/^https:\/\//i.test(row.source_url));
   }catch(error){console.warn("RSS source failed",source.name,error);return []}
  }));
  const leads:any[]=[];
