@@ -1,0 +1,1 @@
+select cron.alter_job(5, schedule => '10,30,50 * * * *');
