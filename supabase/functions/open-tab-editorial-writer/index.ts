@@ -102,7 +102,7 @@ async function runWriter(url: string, serviceKey: string, geminiKey: string) {
       if (!existingResponse.ok) throw new Error("Could not check duplicate articles");
       const existing = await existingResponse.json();
       if (existing.length) {
-        await fetch(url + "/rest/v1/editorial_story_leads?id=eq." + lead.id, { method: "PATCH", headers: { ...headers, Prefer: "return=minimal" }, body: JSON.stringify({ status: "review", article_id: existing[0].id }) });
+        await fetch(url + "/rest/v1/editorial_story_leads?id=eq." + lead.id, { method: "PATCH", headers: { ...headers, Prefer: "return=minimal" }, body: JSON.stringify({ status: "drafted", article_id: existing[0].id }) });
         results.push({ lead: lead.id, result: "already_exists" }); continue;
       }
       const material = await sourceMaterial(lead.source_url);
@@ -126,7 +126,7 @@ async function runWriter(url: string, serviceKey: string, geminiKey: string) {
       const insert = await fetch(url + "/rest/v1/articles", { method: "POST", headers: { ...headers, Prefer: "return=representation" }, body: JSON.stringify(article) });
       if (!insert.ok) throw new Error("Saving article failed: " + insert.status + " " + (await insert.text()).slice(0, 250));
       const saved = (await insert.json())[0];
-      const updateLead = await fetch(url + "/rest/v1/editorial_story_leads?id=eq." + lead.id, { method: "PATCH", headers: { ...headers, Prefer: "return=minimal" }, body: JSON.stringify({ status: "review", article_id: saved.id }) });
+      const updateLead = await fetch(url + "/rest/v1/editorial_story_leads?id=eq." + lead.id, { method: "PATCH", headers: { ...headers, Prefer: "return=minimal" }, body: JSON.stringify({ status: "drafted", article_id: saved.id }) });
       if (!updateLead.ok) throw new Error("Article saved but lead status update failed");
       results.push({ lead: lead.id, article: saved.id, title: saved.title, result: "created_for_editorial_review" });
     } catch (error) {
