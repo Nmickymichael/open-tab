@@ -42,7 +42,9 @@ async function discover(url:string,key:string){
  const leads:any[]=[];
  for(const batch of feeds)for(const row of batch){if(!leads.some(x=>x.source_url===row.source_url))leads.push(row);if(leads.length>=80)break}
  if(!leads.length)throw new Error("No eligible RSS story leads returned from the configured international newsrooms.");
- const response=await fetch(url+"/rest/v1/editorial_story_leads",{method:"POST",headers:{apikey:key,Authorization:"Bearer "+key,"Content-Type":"application/json",Prefer:"resolution=ignore-duplicates,return=minimal"},body:JSON.stringify(leads)});
+ const leadsUrl=new URL(url+"/rest/v1/editorial_story_leads");
+ leadsUrl.searchParams.set("on_conflict","source_url");
+ const response=await fetch(leadsUrl,{method:"POST",headers:{apikey:key,Authorization:"Bearer "+key,"Content-Type":"application/json",Prefer:"resolution=ignore-duplicates,return=minimal"},body:JSON.stringify(leads)});
  if(!response.ok)throw new Error("Saving international story leads failed: "+response.status+" "+(await response.text()).slice(0,300));
  console.log("Daily international newsroom discovery completed",JSON.stringify({sources:RSS_SOURCES.length,leads:leads.length,date:day}));
 }
