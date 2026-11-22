@@ -108,7 +108,7 @@ async function runWriter(url: string, serviceKey: string, geminiKey: string) {
       const material = await sourceMaterial(lead.source_url);
       const draft = await generateArticle(geminiKey, lead, material);
       if (draft.reject) {
-        await fetch(url + "/rest/v1/editorial_story_leads?id=eq." + lead.id, { method: "PATCH", headers: { ...headers, Prefer: "return=minimal" }, body: JSON.stringify({ status: "rejected" }) });
+        await fetch(url + "/rest/v1/editorial_story_leads?id=eq." + lead.id, { method: "PATCH", headers: { ...headers, Prefer: "return=minimal" }, body: JSON.stringify({ status: "dismissed" }) });
         results.push({ lead: lead.id, result: "rejected", reason: String(draft.reason ?? "Insufficient source material").slice(0, 180) }); continue;
       }
       if (!draft.title || !draft.excerpt || !draft.content || !draft.factual_basis || draft.content.length < 500) throw new Error("Generated article failed editorial completeness checks");
