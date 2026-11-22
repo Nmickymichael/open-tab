@@ -39,8 +39,8 @@ function cleanText(html: string): string {
 function meta(html: string, key: string): string {
   const escaped = key.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
   const patterns = [
-    new RegExp('<meta[^>]+(?:name|property)=["\\']' + escaped + '["\\'][^>]+content=["\\']([^"\\']+)["\\']', "i"),
-    new RegExp('<meta[^>]+content=["\\']([^"\\']+)["\\'][^>]+(?:name|property)=["\\']' + escaped + '["\\']', "i")
+    new RegExp("<meta[^>]+(?:name|property)=[\"\\x27]" + escaped + "[\"\\x27][^>]+content=[\"\\x27]([^\"\\x27]+)[\"\\x27]", "i"),
+    new RegExp("<meta[^>]+content=[\"\\x27]([^\"\\x27]+)[\"\\x27][^>]+(?:name|property)=[\"\\x27]" + escaped + "[\"\\x27]", "i")
   ];
   for (const pattern of patterns) { const match = html.match(pattern); if (match) return cleanText(match[1]); }
   return "";
