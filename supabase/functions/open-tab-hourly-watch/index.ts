@@ -4,7 +4,7 @@ const REGIONS = ["US","CA","MX","BR","AR","GB","IE","DE","FR","ES","IT","NL","SE
 const CATEGORY: Record<string,string> = {
   "1":"Movies","2":"Lifestyle","10":"Music","15":"Education & Science","17":"Sports",
   "20":"Gaming","22":"Viral Culture","23":"Comedy","24":"Movies",
-  "25":"News","26":"DIY & Builds","27":"Education & Science","28":"Technology"
+  "25":"News","26":"Lifestyle & How-to","27":"Education & Science","28":"Technology"
 };
 const PRIORITY_CREATORS = [
   "mrbeast","mrwhosetheboss","marques brownlee","mkbhd","unbox therapy",
