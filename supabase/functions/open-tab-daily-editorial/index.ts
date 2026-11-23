@@ -31,16 +31,18 @@ async function discover(url:string,key:string){
    const response=await fetch(source.url,{headers:{"User-Agent":"OPEN TAB newsroom discovery/1.0","Accept":"application/rss+xml, application/xml, text/xml"}});
    if(!response.ok){console.warn("RSS source unavailable",source.name,response.status);return []}
    const xml=await response.text(),items=xml.match(/<item\b[\s\S]*?<\/item>/gi)??[];
-   return items.slice(0,12).map(block=>{
+   const now=Date.now(), oldest=now-72*60*60*1000;
+   return items.slice(0,20).map(block=>{
     const title=tagValue(block,"title"),link=tagValue(block,"link"),published=tagValue(block,"pubDate");
     const date=published?new Date(published):null;
-    const sourceTag=block.match(/<source[^>]*>([\s\S]*?)<\/source>/i);
-    return {headline:title.slice(0,500),source_name:sourceTag?decodeXml(sourceTag[1]):source.name,source_url:link,source_published_at:date&&!Number.isNaN(date.getTime())?date.toISOString():null,region:source.region,story_date:day,status:"new"};
-   }).filter((row:any)=>row.headline&&/^https:\/\//i.test(row.source_url));
+    const sourceTag=block.match(/<source[^>]*>([\\s\\S]*?)<\\/source>/i);
+    const publishedMs=date&&!Number.isNaN(date.getTime())?date.getTime():0;
+    return {headline:title.slice(0,500),source_name:sourceTag?decodeXml(sourceTag[1]):source.name,source_url:link,source_published_at:publishedMs?new Date(publishedMs).toISOString():null,region:source.region,story_date:day,status:"new",_publishedMs:publishedMs};
+   }).filter((row:any)=>row.headline&&/^https:\\/\\//i.test(row.source_url)&&row._publishedMs>=oldest&&row._publishedMs<=now+5*60*1000).map(({_publishedMs,...row}:any)=>row);
   }catch(error){console.warn("RSS source failed",source.name,error);return []}
  }));
  const leads:any[]=[];
- for(const batch of feeds)for(const row of batch){if(!leads.some(x=>x.source_url===row.source_url))leads.push(row);if(leads.length>=80)break}
+ for(const batch of feeds)for(const row of batch){const normalized=row.headline.toLowerCase().replace(/[^a-z0-9]+/g," ").trim();if(!leads.some(x=>x.source_url===row.source_url||x.headline.toLowerCase().replace(/[^a-z0-9]+/g," ").trim()===normalized))leads.push(row);if(leads.length>=80)break}
  if(!leads.length)throw new Error("No eligible RSS story leads returned from the configured international newsrooms.");
  const leadsUrl=new URL(url+"/rest/v1/editorial_story_leads");
  leadsUrl.searchParams.set("on_conflict","source_url");
